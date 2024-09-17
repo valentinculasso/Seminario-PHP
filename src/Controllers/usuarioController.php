@@ -1,14 +1,12 @@
-<?php //namespace ..\Controllers
+<?php //namespace
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class usuarioController{
 
-    public function getAll($request, $response, $arg){
-        $response->getBody()->write("Hola Mundo");
-
-        return $response;
+    public function getUser($id){
+        return ['status'=>200, 'result'=>'pablo'];
     }
 
 }
