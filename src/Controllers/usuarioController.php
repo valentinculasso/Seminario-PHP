@@ -15,11 +15,7 @@ class usuarioController {
         
             $result = mysqli_query($conn, $sql);
         
-            $variable = mysqli_fetch_array($result);
-        
-            $response = $variable["nombre"];
-        
-            // $response->getBody()->write($variable["nombre"]);
+            $response = mysqli_fetch_array($result);
 
             $conn = desconectarbd($conn);
 

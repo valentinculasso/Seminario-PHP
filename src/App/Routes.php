@@ -17,7 +17,12 @@ require __DIR__ . "/../Controllers/usuarioController.php";
 
         $response->getBody()->write(json_encode($respuesta));
 
-        $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+        // $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']); 
+
+        return $response;
+    });
+
+    $app->post('/usuario', function(Request $request, Response $response){
 
         return $response;
     });
