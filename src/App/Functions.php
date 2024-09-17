@@ -1,6 +1,9 @@
 <?php
 
     function conectarbd(){
+
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT); // Permite manejar excepcion
+
         $conn = mysqli_connect("localhost", "root", "", "seminariophp");
         
         if (!$conn) {

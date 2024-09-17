@@ -15,18 +15,22 @@ require __DIR__ . "/../Controllers/usuarioController.php";
         
         $respuesta = $usuarioController->getUser($user_id);
 
-        $response->getBody()->write(json_encode($respuesta));
+        $response->getBody()->write(json_encode($respuesta['result']));
 
-        // $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']); 
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
-        return $response;
     });
 
     $app->post('/usuario', function(Request $request, Response $response){
 
-        return $response;
+        $datos_usuario = $request->getParsedBody();
+
+        $nombre = $datos_usuario['nombre_usuario'];
+        $clave = $datos_usuario['clave'];
+        $admin = $datos_usuario['es_admin'];
+
+        // insert a la base
+
     });
-
-
 
 ?>

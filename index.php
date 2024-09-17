@@ -6,7 +6,6 @@ require __DIR__ . '/vendor/autoload.php';
 
 $app = AppFactory::create();
 
-
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 $app->add( function ($request, $handler) {
@@ -20,7 +19,7 @@ $app->add( function ($request, $handler) {
     ;
 });
 
-require __DIR__ . "/src/App/Routes.php"; // No me toma el archivo Routes.php por lo que me tira error
+require __DIR__ . "/src/App/Routes.php";
 
 $app->run();
 

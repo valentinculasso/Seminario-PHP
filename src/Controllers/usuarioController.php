@@ -8,7 +8,8 @@ require __DIR__ . "/../App/Functions.php";
 class usuarioController {
 
     public function getUser($id){
-    
+        try{
+
             $conn = conectarbd();
         
             $sql = "SELECT * FROM `juego` WHERE id = $id";
@@ -17,9 +18,27 @@ class usuarioController {
         
             $response = mysqli_fetch_array($result);
 
-            $conn = desconectarbd($conn);
+            if(!$response){
 
-            return $response;
+                $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
+
+            }
+            else{
+
+                $respuesta = ['status'=>200, 'result'=>$response];
+
+            }
+            $conn = desconectarbd($conn);
+        }
+        catch(Exception $e){
+
+            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+
+        }
+
+
+        return $respuesta;
+
     }
 
 }
