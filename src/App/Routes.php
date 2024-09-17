@@ -10,7 +10,7 @@ require __DIR__ . "/../Controllers/usuarioController.php";
     $app->get('/usuario/{id}',function(Request $request, Response $response){
 
         $usuarioController = new usuarioController();
-        
+
         $user_id = $request -> getAttribute('id');
         
         $respuesta = $usuarioController->getUser($user_id);
