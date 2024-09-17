@@ -10,7 +10,7 @@
             exit;
         }
         
-        echo "Éxito: Se realizó una conexión apropiada a MySQL! La base de datos mi_bd es genial." . PHP_EOL;
+        echo "Éxito: Se realizó una conexión apropiada a MySQL!" . PHP_EOL;
         echo "Información del host: " . mysqli_get_host_info($conn) . PHP_EOL;
         
         return $conn;
