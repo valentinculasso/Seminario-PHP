@@ -9,7 +9,6 @@ class usuarioController {
 
     public function getUser($id){
         try{
-
             // Me conecto a la base de datos
             $conn = conectarbd();
             // En $sql genero la consulta SQL
@@ -39,12 +38,33 @@ class usuarioController {
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
 
         }
-
         // retorno $respuesta -> la cual puede ser un status 200 OK , 404 not found o 500
         return $respuesta;
-
     }
 
+    public function insertUser($nombre, $clave, $admin){
+        try{
+            $conn = conectarbd();
+
+            $sql = "INSERT INTO usuario VALUES ($nombre, $clave, $admin)";
+
+            $response = mysqli_query($conn, $sql);
+
+            if(!$response){
+                $respuesta =  ['status'=> 401, 'result'=>"No se ha creado un nuevo usuario"];
+            }
+            else{
+                $respuesta = ['status'=>200, 'result'=>"Se ha creado un nuevo usario"];
+            }
+
+        }
+        catch(Exception $e){
+            // Si por ejemplo no me pude conectar a la base de datos envio un status 500
+            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+        }
+
+        return $respuesta;
+    }
 }
 
 ?>

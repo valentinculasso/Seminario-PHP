@@ -29,6 +29,8 @@ require __DIR__ . "/../Controllers/usuarioController.php";
 
     $app->post('/usuario', function(Request $request, Response $response){
 
+        $usuarioController = new usuarioController();
+
         $datos_usuario = $request->getParsedBody();
 
         $nombre = $datos_usuario['nombre_usuario'];
@@ -36,7 +38,12 @@ require __DIR__ . "/../Controllers/usuarioController.php";
         $admin = $datos_usuario['es_admin'];
 
         // insert a la base
+        $respuesta = $usuarioController->insertUser($nombre, $clave, $admin);
 
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+        
     });
 
     $app->put('/usuario/{id}', function(Request $request, Response $response){
