@@ -57,6 +57,7 @@ require __DIR__ . "/../Controllers/usuarioController.php";
 
     // Juegos -----------------------------------------------------------------------------
 
+    //Listar los juegos de la página según los parámetrosde búsqueda incluyendo la puntuación promedio del juego.
     $app->get('/juegos?pagina={pagina}&clasificacion={clasificacion}&texto={texto}&plataforma={plataforma}', function(Request $request, Response $response){
 
         $datos_usuario = $request->getParsedBody(); 
@@ -104,4 +105,35 @@ require __DIR__ . "/../Controllers/usuarioController.php";
 
     // Calificaciones ---------------------------------------------------------------------
 
+    //  Crear una nueva calificación. Solo lo puede hacer unusuario logueado.
+    $app->post('/calificacion', function(Request $request, Response $response){
+
+        $datos_usuario = $request->getParsedBody();
+
+        // insert a la base
+
+    });
+
+    /* 
+    PUT /calificacion/{id}: Editar una calificación existente. Solo lo puede hacer un usuario logueado.
+        ○ Éxito: Código 200 OK, se actualiza el valor de puntuación del juego
+        solo si el token coincide con el almacenado para ese usuario y el token no está vencido.
+        ○ Fallo: Código de estado 401 Unauthorized, con un mensaje de error.
+    */
+    $app->put('/calificacion/{id}', function(Request $request, Response $response){
+
+        $user_id = $request -> getAttribute('id');
+
+        // put a la base
+
+    });
+
+    // Eliminar una calificación. Solo lo puede hacer un usuario logueado.
+    $app->delete('/calificacion/{id}', function(Request $request, Response $response){
+
+        $user_id = $request -> getAttribute('id');
+
+        // delete a la base
+
+    });
 ?>
