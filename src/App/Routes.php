@@ -50,15 +50,23 @@ require __DIR__ . "/../Controllers/usuarioController.php";
 
         $user_id = $request -> getAttribute('id');
 
-        // put a la base
+        // put a la base -> aca tengo una duda, osea yo recibo el ID y a ese usuario lo voy a modificar. Pero en si como se que le tengo que modificar? 
+        // ya viene en el request o como es? Porque en el caso del delete recibo id y elimino el usuario con dicho id y listo
 
     });
 
     $app->delete('/usuario/{id}', function(Request $request, Response $response){
 
+        $usuarioController = new usuarioController();
+
         $user_id = $request -> getAttribute('id');
 
         // delete a la base
+        $respuesta = $usuarioController->deleteUser($user_id);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
     });
 

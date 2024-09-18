@@ -13,7 +13,7 @@ class usuarioController {
             $conn = conectarbd();
             // En $sql genero la consulta SQL
             $sql = "SELECT * FROM `juego` WHERE id = $id";
-            // Si no me equivoco envio la coneccion a la base de datos y la consulta y me guarda en $result el contenido del id $id
+            // Envia la consulta a la base de datos
             $result = mysqli_query($conn, $sql);
             // Si no me equivoco me convierte el $result en un array con los datos del usuario
             $response = mysqli_fetch_array($result);
@@ -66,6 +66,32 @@ class usuarioController {
 
         return $respuesta;
     }
+
+    public function deleteUser($id){
+        try{
+            $conn = conectarbd();
+            // consulta SQL
+            $sql = "DELETE FROM `usuario` WHERE id = $id";
+            // Envia la consulta a la base de datos
+            $response = mysqli_query($conn, $sql);
+
+            if(!$response){
+                // error 400 seria por valores invalidos (id), etc
+                $respuesta =  ['status'=> 400, 'result'=>"No se ha eliminado el usuario"];
+            }
+            else{
+                $respuesta = ['status'=>200, 'result'=>"Se ha eliminado correctamente el usario"];
+            }
+
+            $conn = desconectarbd($conn);
+        }
+        catch(Exception $e){
+            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+        }
+
+        return $respuesta;
+    }
+
 }
 
 ?>
