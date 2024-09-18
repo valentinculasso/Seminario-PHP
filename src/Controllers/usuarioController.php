@@ -46,7 +46,7 @@ class usuarioController {
         try{
             $conn = conectarbd();
 
-            $sql = "INSERT INTO usuario VALUES ($nombre, $clave, $admin)";
+            $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '$admin')";
 
             $response = mysqli_query($conn, $sql);
 
@@ -57,6 +57,7 @@ class usuarioController {
                 $respuesta = ['status'=>200, 'result'=>"Se ha creado un nuevo usario"];
             }
 
+            $conn = desconectarbd($conn);
         }
         catch(Exception $e){
             // Si por ejemplo no me pude conectar a la base de datos envio un status 500

@@ -43,7 +43,7 @@ require __DIR__ . "/../Controllers/usuarioController.php";
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-        
+
     });
 
     $app->put('/usuario/{id}', function(Request $request, Response $response){
