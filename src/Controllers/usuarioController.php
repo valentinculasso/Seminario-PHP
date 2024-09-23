@@ -3,7 +3,7 @@
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-require_once __DIR__ . "/../App/Functions.php";
+require_once __DIR__ . "/../App/Functions.php"; // require_once me permite usar la carpeta functions en todas las clases Controller
 
 class usuarioController {
 
