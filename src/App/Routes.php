@@ -11,6 +11,42 @@ require __DIR__ . "/../Controllers/calificacionController.php";
 
 // Usuarios
 
+    $app->post('/register', function(Request $request, Response $response){
+
+        $usuarioController = new usuarioController();
+
+        $datos_usuario = $request->getParsedBody();
+
+        // El enunciado me dice que se agrega un nuevo usuario solo con su nombre de usuario y clave
+
+        // Nombre de usuario debe tener por lo menos 6 caracteres y no mas de 20 caracteres y que sean unicamente alfanumericos
+        // ademas, se debe verificar que el nombre de usuario no este en uso
+        $nombre = $datos_usuario['nombre_usuario'];
+        // La clave debe tener por lo menos 8 caracteres y tiene que tener si o si mayusculas, minusculas, numeros y caracteres especiales
+        $clave = $datos_usuario['clave'];
+        
+        $respuesta = $usuarioController-> register($nombre, $clave);
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+    });
+
+    $app->post('/login', function(Request $request, Response $Response){
+
+        $usuarioController = new usuarioController();
+
+        $datos_usuario = $request->getParsedBody();
+
+        $nombre = $datos_usuario['nombre_usuario'];
+        $clave = $datos_usuario['clave'];
+
+        // En usuario controller podria tener una funcion que reciba el nombre y clave y que haga la verificacion (osea que coinciden los datos)
+        // y en Models/usuario podria tener la generacion del token
+        $respuesta = $usuarioController->login($nombre, $clave);
+
+
+    });
+
     $app->get('/usuario/{id}',function(Request $request, Response $response){
 
         // Instancio la clase
@@ -18,6 +54,10 @@ require __DIR__ . "/../Controllers/calificacionController.php";
         // Cargo en una variable user_id el id que me viene en el request
         $user_id = $request -> getAttribute('id');
         // Cargo en respuesta la tabla con los datos del usuario con id = user_id
+
+        // CHEQUEAR SI EL USUARIO ESTA LOGEADO
+
+        ///
         $respuesta = $usuarioController->getUser($user_id);
         // Genero un json con los datos del usuario
         $response->getBody()->write(json_encode($respuesta['result']));

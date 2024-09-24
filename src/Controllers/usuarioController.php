@@ -2,10 +2,39 @@
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 require_once __DIR__ . "/../App/Functions.php"; // require_once me permite usar la carpeta functions en todas las clases Controller
+require __DIR__ . "/../Models/usuario.php"; // Para generar un token voy a necesitar usar la carpeta Models donde se encuentra la clase usuario
 
 class usuarioController {
+
+    public function register($nombreUsuario, $clave){
+
+        if (ctype_alnum($nombreUsuario)){ //Primero chequeo que la cadena sean TODOS alfanumericos
+            if(!(strlen($nombreUsuario) > 6)or(!(strlen($nombreUsuario) < 20))){ // Luego chequeo que este en el rango de caracteres
+                $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
+            }
+            else{
+                // si entra aca el nombre de usuario es valido por lo que tengo que chequear ahora la clave
+                if(!(strlen($clave) >8)){
+                    $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
+                }
+                else{
+                    $respuesta = $this -> agregarUsuario($nombreUsuario, $clave);
+                }
+            }
+        }
+        else{
+            $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no es alfanumerico."];
+        }
+        return $respuesta;
+    }
+
+    public function login($usuario, $clave){
+
+    }
 
     public function getUser($id){
         try{
@@ -86,6 +115,30 @@ class usuarioController {
         return $respuesta;
     }
 
+    public function agregarUsuario($nombre, $clave){
+        try{
+            $conn = conectarbd();
+            // consulta SQL
+            $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombre'";
+            // Envia la consulta a la base de datos
+            $response = mysqli_query($conn, $sql);
+            if(!mysqli_num_rows($response)){
+                // El nombre de usuario no existe
+                $this -> insertUser($nombre, $clave, 0);
+                $respuesta = ['status'=>200, 'result'=>'Usuario registrado con exito'];
+            }
+            else{
+                // El nombre de usuario existe
+                $respuesta = ['status'=>401, 'result'=>'No se ha podido registrar ya que el nombre de usuario existe'];
+            }
+            $conn = desconectarbd($conn);
+        }
+        catch(Exception $e){
+            // No se pudo conectar a la base de datos
+            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+        }
+        return $respuesta;
+    }
 }
 
 ?>
