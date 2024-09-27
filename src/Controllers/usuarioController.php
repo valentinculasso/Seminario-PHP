@@ -2,8 +2,6 @@
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 
 require_once __DIR__ . "/../App/Functions.php"; // require_once me permite usar la carpeta functions en todas las clases Controller
 require __DIR__ . "/../Models/usuario.php"; // Para generar un token voy a necesitar usar la carpeta Models donde se encuentra la clase usuario
@@ -32,8 +30,68 @@ class usuarioController {
         return $respuesta;
     }
 
-    public function login($usuario, $clave){
+    public function login($nombreUsuario, $clave){
 
+        // recibo nombre usuario y clave por lo cual debo verificar que sean los correctos
+
+        $respuesta = $this-> chequearCredenciales($nombreUsuario, $clave); // este metodo me deberia chequear que ambas existan (osea que sean correctas)
+
+
+
+        return $respuesta;
+
+        // Una vez chequeado me "deberia logear", para eso debo generar un token (creacion del token + vencimiento)
+
+
+    }
+
+    public function chequearCredenciales($nombreUsuario, $clave){
+        try{
+            $conn = conectarbd();
+            // validar parametros de entrada
+
+            $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombreUsuario' AND clave = '$clave'";
+
+            $response = mysqli_query($conn, $sql);
+            if(mysqli_num_rows($response) > 0){
+                // Si entra aca el nombre de usuario y clave existen y son validas
+                $user = mysqli_fetch_assoc($response);
+                $fecha = new DateTime();
+                // Crear token
+                $token = '{
+                    "id":'.  $user['id'] .',
+                    "date":'. $fecha->format('y-m-d H:i') .'
+                }';
+                
+                $token_encode = base64_encode($token);
+                
+                $fechaVencimiento = new DateTime();
+                $fechaVencimiento -> modify('+1 hour');
+                $VencimientoToken = '{
+                    "id":'.  $user['id'] .',
+                    "exp":'. $fechaVencimiento->format('y-m-d H:i') .'
+                }';
+
+                $tokenVencimiento_encode = base64_encode($VencimientoToken);
+
+                $id = $user['id'];
+                $sql = "UPDATE `usuario` SET token = '$token_encode' AND vencimiento_token = '$tokenVencimiento_encode' WHERE id = '$id'";
+                $response = mysqli_execute_query($conn, $sql);
+
+
+                $respuesta = ['status'=>200, 'result'=>$token_encode];
+            }
+            else{
+                // El nombre de usuario no existe
+                $respuesta = ['status'=>401, 'result'=>'Credenciales incorrectas'];
+            }
+            $conn = desconectarbd($conn);
+        }
+        catch(Exception $e){
+            // No se pudo conectar a la base de datos
+            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+        }
+        return $respuesta;
     }
 
     public function getUser($id){

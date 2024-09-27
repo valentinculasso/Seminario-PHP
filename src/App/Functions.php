@@ -13,9 +13,6 @@
             exit;
         }
         
-        echo "Éxito: Se realizó una conexión apropiada a MySQL!" . PHP_EOL;
-        echo "Información del host: " . mysqli_get_host_info($conn) . PHP_EOL;
-        
         return $conn;
     }
 
