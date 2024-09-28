@@ -7,6 +7,7 @@ require_once __DIR__ . "/../App/Functions.php"; // require_once me permite usar 
 
 class usuarioController {
 
+    // register($nombreUsuario, $clave): registra un nuevo usuario. Recibe como parametros el nombre de usuario y la clave
     public function register($nombreUsuario, $clave){
         if (ctype_alnum($nombreUsuario)){ //Primero chequeo que la cadena sean TODOS alfanumericos
             if(!(strlen($nombreUsuario) > 6)or(!(strlen($nombreUsuario) < 20))){ // Luego chequeo que este en el rango de caracteres
@@ -62,6 +63,7 @@ class usuarioController {
         return $respuesta;
     }
 
+    // login($nombreUsuario, $clave): login a un usuario, se le generan sus respectivos tokens. Se recibe como parametro el nombre de usuario y su clave
     public function login($nombreUsuario, $clave){
         try{
             $conn = conectarbd();
@@ -80,7 +82,9 @@ class usuarioController {
                 }';
                 $token_encode = base64_encode($token); // le aplico base64 al token
                 // Fin crear token
+
                 $id = $user['id']; // Creo variable $id y le asigno el id del usuario que se esta logeando
+
                 // Crear vencimiento_token (es un DateTime en mi base de datos)
                 $fechaVencimiento = new DateTime();
                 $fechaVencimiento->modify('+1 hour'); // Sumar 1 hora a la fecha actual
@@ -89,7 +93,7 @@ class usuarioController {
 
                 $sql = "UPDATE `usuario` SET token = '$token_encode' , vencimiento_token = '$vencimientoTokenDate' WHERE id = '$id'";
                 $response = mysqli_query($conn, $sql);
-                // Deberia agregar un chequeo para saber si se ejecuto correctamente?
+                // Deberia agregar un chequeo para saber si se ejecuto la consulta correctamente?
                 $respuesta = ['status'=>200, 'result'=>$token_encode];
             }
             else{

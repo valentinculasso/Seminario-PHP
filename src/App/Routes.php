@@ -117,28 +117,55 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
     // Da de alta un nuevo juego. Solo lo puede hacer un usuario logueado y que sea administrador.
     $app->post('/juego', function(Request $request, Response $response){
 
-        $datos_usuario = $request->getParsedBody();
+        $juegoController = new juegoController();
 
-        $nombre = $datos_usuario['nombre_usuario']; // Bueno aca irian los campos de juego
-        $clave = $datos_usuario['clave'];
-        $admin = $datos_usuario['es_admin'];
+        $datos_juego = $request->getParsedBody();
 
-        // insert a la base
+        $nombre = $datos_juego['nombre'];
+        $descripcion = $datos_juego['descripcion'];
+        $imagen = $datos_juego['imagen'];
+        $clasificacion_edad = $datos_juego['clasificacion_edad'];
+
+        $respuesta = $juegoController->agregarJuego($nombre, $descripcion, $imagen, $clasificacion_edad);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
     });
 
     // actualiza los datos de un juego existente. Solo lo puede hacer un usuario logueado y que sea administrador.
     $app->put('/juego/{id}', function(Request $request, Response $response){
 
+        $juegoController = new juegoController();
 
+        $juego_id = $request -> getAttribute('id');
+        $datos_juego = $request->getParsedBody();
+
+        $nombre = $datos_juego['nombre'];
+        $descripcion = $datos_juego['descripcion'];
+        $imagen = $datos_juego['imagen'];
+        $clasificacion_edad = $datos_juego['clasificacion_edad'];
+
+        $respuesta = $juegoController->editarJuego($juego_id, $nombre, $descripcion, $imagen, $clasificacion_edad);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
     });
 
     //  borra el juego siempre y cuando no tenga calificaciones. Solo lo puede hacer un usuario logueado y que sea administrador.
     $app->delete('/juego/{id}', function(Request $request, Response $response){
 
+        $juegoController = new juegoController();
+
         $user_id = $request -> getAttribute('id');
 
-        // delete a la base
+        $respuesta = $juegoController->eliminarJuego($user_id);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
     });
 
