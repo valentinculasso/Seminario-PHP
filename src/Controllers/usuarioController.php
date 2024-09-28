@@ -4,23 +4,26 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 require_once __DIR__ . "/../App/Functions.php"; // require_once me permite usar la carpeta functions en todas las clases Controller
-require __DIR__ . "/../Models/usuario.php"; // Para generar un token voy a necesitar usar la carpeta Models donde se encuentra la clase usuario
 
 class usuarioController {
 
     public function register($nombreUsuario, $clave){
-
         if (ctype_alnum($nombreUsuario)){ //Primero chequeo que la cadena sean TODOS alfanumericos
             if(!(strlen($nombreUsuario) > 6)or(!(strlen($nombreUsuario) < 20))){ // Luego chequeo que este en el rango de caracteres
                 $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
             }
             else{
                 // si entra aca el nombre de usuario es valido por lo que tengo que chequear ahora la clave
-                if(!(strlen($clave) >8)){
+                if(!(strlen($clave) > 8)){
                     $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
                 }
                 else{
-                    $respuesta = $this -> agregarUsuario($nombreUsuario, $clave);
+                    if (!preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave) || !preg_match('/[\W_]/', $clave)) {
+                        $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
+                    }
+                    else{
+                        $respuesta = $this -> agregarUsuario($nombreUsuario, $clave);
+                    }
                 }
             }
         }
@@ -30,55 +33,63 @@ class usuarioController {
         return $respuesta;
     }
 
-    public function login($nombreUsuario, $clave){
-
-        // recibo nombre usuario y clave por lo cual debo verificar que sean los correctos
-
-        $respuesta = $this-> chequearCredenciales($nombreUsuario, $clave); // este metodo me deberia chequear que ambas existan (osea que sean correctas)
-
-
-
+    // agregarUsuario($nombre, $clave): Si el usuario no existe agrega un nuevo usuario a la base de datos. Recibe como parametros el nombre de usuario y su contraseña
+    public function agregarUsuario($nombre, $clave){
+        try{
+            $conn = conectarbd();
+            $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombre'";
+            $response = mysqli_query($conn, $sql);
+            if(!mysqli_num_rows($response)){
+                // Si entra aca el nombre de usuario no existe
+                $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '0')";
+                $response = mysqli_query($conn, $sql);
+                if(!$response){
+                    $respuesta =  ['status'=> 401, 'result'=>"No se ha creado un nuevo usuario"];
+                }
+                else{
+                    $respuesta = ['status'=>200, 'result'=>"Se ha registrado con exito"];
+                }
+            }
+            else{
+                // Si entra aca el nombre de usuario existe
+                $respuesta = ['status'=>401, 'result'=>'No se ha podido registrar ya que el nombre de usuario existe'];
+            }
+            $conn = desconectarbd($conn);
+        }
+        catch(Exception $e){
+            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+        }
         return $respuesta;
-
-        // Una vez chequeado me "deberia logear", para eso debo generar un token (creacion del token + vencimiento)
-
-
     }
 
-    public function chequearCredenciales($nombreUsuario, $clave){
+    public function login($nombreUsuario, $clave){
         try{
             $conn = conectarbd();
             // validar parametros de entrada
-
             $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombreUsuario' AND clave = '$clave'";
-
             $response = mysqli_query($conn, $sql);
             if(mysqli_num_rows($response) > 0){
                 // Si entra aca el nombre de usuario y clave existen y son validas
                 $user = mysqli_fetch_assoc($response);
-                $fecha = new DateTime();
+
                 // Crear token
+                $fecha = new DateTime(); // Creo variable fecha instanciando DateTime
                 $token = '{
                     "id":'.  $user['id'] .',
                     "date":'. $fecha->format('y-m-d H:i') .'
                 }';
-                
-                $token_encode = base64_encode($token);
-                
+                $token_encode = base64_encode($token); // le aplico base64 al token
+                // Fin crear token
+                $id = $user['id']; // Creo variable $id y le asigno el id del usuario que se esta logeando
+                // Crear vencimiento_token (es un DateTime en mi base de datos)
                 $fechaVencimiento = new DateTime();
-                $fechaVencimiento -> modify('+1 hour');
-                $VencimientoToken = '{
-                    "id":'.  $user['id'] .',
-                    "exp":'. $fechaVencimiento->format('y-m-d H:i') .'
-                }';
+                $fechaVencimiento->modify('+1 hour'); // Sumar 1 hora a la fecha actual
+                $vencimientoTokenDate = $fechaVencimiento->format('Y-m-d H:i:s');
+                // Fin crear vencimiento_token
 
-                $tokenVencimiento_encode = base64_encode($VencimientoToken);
-
-                $id = $user['id'];
-                $sql = "UPDATE `usuario` SET token = '$token_encode' AND vencimiento_token = '$tokenVencimiento_encode' WHERE id = '$id'";
-                $response = mysqli_execute_query($conn, $sql);
-
-
+                $sql = "UPDATE `usuario` SET token = '$token_encode' , vencimiento_token = '$vencimientoTokenDate' WHERE id = '$id'";
+                $response = mysqli_query($conn, $sql);
+                // Deberia agregar un chequeo para saber si se ejecuto correctamente?
                 $respuesta = ['status'=>200, 'result'=>$token_encode];
             }
             else{
@@ -94,77 +105,78 @@ class usuarioController {
         return $respuesta;
     }
 
-    public function getUser($id){
-        try{
-            // Me conecto a la base de datos
-            $conn = conectarbd();
-            // En $sql genero la consulta SQL
-            $sql = "SELECT * FROM `usuario` WHERE id = $id";
-            // Envia la consulta a la base de datos
-            $result = mysqli_query($conn, $sql);
-            // Si no me equivoco me convierte el $result en un array con los datos del usuario
-            $response = mysqli_fetch_array($result);
-            // Si $response es null entonces envio un status 404
-            if(!$response){
-                $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
-            }
-            // Si no $respuesta es valida y envio un status 200 OK y en result el array con los datos del usuario ($response)
-            else{
-                $respuesta = ['status'=>200, 'result'=>$response];
-            }
-            // Una vez terminado me desconecto de la base de datos
-            $conn = desconectarbd($conn);
-        }
-        catch(Exception $e){
-            // Si por ejemplo no me pude conectar a la base de datos envio un status 500
-            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
-        }
-        // retorno $respuesta -> la cual puede ser un status 200 OK , 404 not found o 500
-        return $respuesta;
-    }
+    // De aqui para abajo son los metodos utilizados para el POST, PUT, DELETE Y GET en ese orden.
 
-    public function insertUser($nombre, $clave, $admin){
+    // createUser($nombre, $clave, $admin): Crea un nuevo usuario. Recibe como parametros el nombre de usuario, su clave y si es o no admin.
+    public function createUser($nombre, $clave, $admin){
         try{
             $conn = conectarbd();
-
             $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '$admin')";
-
             $response = mysqli_query($conn, $sql);
-
             if(!$response){
                 $respuesta =  ['status'=> 401, 'result'=>"No se ha creado un nuevo usuario"];
             }
             else{
                 $respuesta = ['status'=>200, 'result'=>"Se ha creado un nuevo usario"];
             }
-
             $conn = desconectarbd($conn);
         }
         catch(Exception $e){
             // Si por ejemplo no me pude conectar a la base de datos envio un status 500
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
         }
-
         return $respuesta;
     }
 
-    public function deleteUser($id){
+    // editUser($id): Edita un usuario existente. Recibe como parametro el ID del usuario.
+    public function editUser($id){
         try{
-            $conn = conectarbd();
-            // consulta SQL
-            $sql = "DELETE FROM `usuario` WHERE id = $id";
-            // Envia la consulta a la base de datos
-            $response = mysqli_query($conn, $sql);
-
-            if(!$response){
-                // error 400 seria por valores invalidos (id), etc
-                $respuesta =  ['status'=> 400, 'result'=>"No se ha eliminado el usuario"];
+            // Chequeo que el usuario se encuentre logeado
+            $log = verificarLogin($id);
+            if($log){
+                $conn = conectarbd();
+                $sql = "SELECT * FROM `usuario` WHERE id = $id";
+                $result = mysqli_query($conn, $sql);
+                $response = mysqli_fetch_array($result);
+                if(!$response){
+                    $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
+                }
+                else{
+                    $respuesta = ['status'=>200, 'result'=>$response];
+                }
+                $conn = desconectarbd($conn);
             }
             else{
-                $respuesta = ['status'=>200, 'result'=>"Se ha eliminado correctamente el usario"];
+                $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
             }
+        }
+        catch(Exception $e){
+            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+        }
+        return $respuesta;
+    }
 
-            $conn = desconectarbd($conn);
+    // deleteUser($id): Elimina un usuario. Recibe como parametro el ID del usuario a eliminar.
+    public function deleteUser($id){
+        try{
+            // Chequeo que el usuario se encuentre logeado
+            $log = verificarLogin($id);
+            if($log){
+                $conn = conectarbd();
+                $sql = "DELETE FROM `usuario` WHERE id = $id";
+                $response = mysqli_query($conn, $sql);
+                if(!$response){
+                    $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado el usuario"];
+                }
+                else{
+                    $respuesta = ['status'=>200, 'result'=>"Se ha eliminado correctamente el usario"];
+                }
+
+                $conn = desconectarbd($conn);
+            }
+            else{
+                $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
+            }
         }
         catch(Exception $e){
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
@@ -173,26 +185,29 @@ class usuarioController {
         return $respuesta;
     }
 
-    public function agregarUsuario($nombre, $clave){
+    // getUser($id): Obtiene la informacion de un usuario especifico. Recibe como parametro el ID del usuario.
+    public function getUser($id){
         try{
-            $conn = conectarbd();
-            // consulta SQL
-            $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombre'";
-            // Envia la consulta a la base de datos
-            $response = mysqli_query($conn, $sql);
-            if(!mysqli_num_rows($response)){
-                // El nombre de usuario no existe
-                $this -> insertUser($nombre, $clave, 0);
-                $respuesta = ['status'=>200, 'result'=>'Usuario registrado con exito'];
+            // Chequeo que el usuario se encuentre logeado
+            $log = verificarLogin($id);
+            if($log){
+                $conn = conectarbd();
+                $sql = "SELECT * FROM `usuario` WHERE id = $id";
+                $result = mysqli_query($conn, $sql);
+                $response = mysqli_fetch_array($result);
+                if(!$response){
+                    $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
+                }
+                else{
+                    $respuesta = ['status'=>200, 'result'=>$response];
+                }
+                $conn = desconectarbd($conn);
             }
             else{
-                // El nombre de usuario existe
-                $respuesta = ['status'=>401, 'result'=>'No se ha podido registrar ya que el nombre de usuario existe'];
+                $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
             }
-            $conn = desconectarbd($conn);
         }
         catch(Exception $e){
-            // No se pudo conectar a la base de datos
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
         }
         return $respuesta;

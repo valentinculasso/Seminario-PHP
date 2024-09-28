@@ -3,29 +3,22 @@
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
-require __DIR__ . "/../Controllers/usuarioController.php";
+require_once __DIR__ . "/../Controllers/usuarioController.php";
 
-require __DIR__ . "/../Controllers/juegoController.php";
+require_once __DIR__ . "/../Controllers/juegoController.php";
 
-require __DIR__ . "/../Controllers/calificacionController.php";
-
-// Usuarios
+require_once __DIR__ . "/../Controllers/calificacionController.php";
 
     $app->post('/register', function(Request $request, Response $response){
 
-        $usuarioController = new usuarioController();
+        $userController = new usuarioController();
 
         $datos_usuario = $request->getParsedBody();
 
-        // El enunciado me dice que se agrega un nuevo usuario solo con su nombre de usuario y clave
-
-        // Nombre de usuario debe tener por lo menos 6 caracteres y no mas de 20 caracteres y que sean unicamente alfanumericos
-        // ademas, se debe verificar que el nombre de usuario no este en uso
         $nombre = $datos_usuario['nombre_usuario'];
-        // La clave debe tener por lo menos 8 caracteres y tiene que tener si o si mayusculas, minusculas, numeros y caracteres especiales
         $clave = $datos_usuario['clave'];
         
-        $respuesta = $usuarioController-> register($nombre, $clave);
+        $respuesta = $userController-> register($nombre, $clave);
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
@@ -45,31 +38,19 @@ require __DIR__ . "/../Controllers/calificacionController.php";
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-
     });
+
+    // Usuarios
 
     $app->get('/usuario/{id}',function(Request $request, Response $response){
 
-        // Instancio la clase
         $usuarioController = new usuarioController();
-        // Cargo en una variable user_id el id que me viene en el request
         $user_id = $request -> getAttribute('id');
-        // Cargo en respuesta la tabla con los datos del usuario con id = user_id
 
-        // CHEQUEAR SI EL USUARIO ESTA LOGEADO
-
-        ///
         $respuesta = $usuarioController->getUser($user_id);
-        // Genero un json con los datos del usuario
+
         $response->getBody()->write(json_encode($respuesta['result']));
-        // Me retorna el status -> 200 OK (me trae el usuario "el cual existe") o 404 en caso de ser null (usuario inexistente)
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-
-
-        // DUDAS: En los últimos 3 casos (donde se recibe el id) se debe validar que el
-        // usuario se haya logueado.
-
-
     });
 
     $app->post('/usuario', function(Request $request, Response $response){
@@ -82,13 +63,11 @@ require __DIR__ . "/../Controllers/calificacionController.php";
         $clave = $datos_usuario['clave'];
         $admin = $datos_usuario['es_admin'];
 
-        // insert a la base
-        $respuesta = $usuarioController->insertUser($nombre, $clave, $admin);
+        $respuesta = $usuarioController->createUser($nombre, $clave, $admin);
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-
     });
 
     $app->put('/usuario/{id}', function(Request $request, Response $response){
@@ -106,13 +85,11 @@ require __DIR__ . "/../Controllers/calificacionController.php";
 
         $user_id = $request -> getAttribute('id');
 
-        // delete a la base
         $respuesta = $usuarioController->deleteUser($user_id);
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-
     });
 
     // Juegos -----------------------------------------------------------------------------
@@ -126,20 +103,18 @@ require __DIR__ . "/../Controllers/calificacionController.php";
 
     $app->get('/juegos/{id}',function(Request $request, Response $response){
 
-        // Instancio la clase
         $juegoController = new juegoController();
-        // Cargo en una variable user_id el id que me viene en el request
-        $user_id = $request -> getAttribute('id');
-        // Cargo en respuesta la tabla con los datos del usuario con id = user_id
-        $respuesta = $juegoController->getJuego($user_id);
-        // Genero un json con los datos del usuario
-        $response->getBody()->write(json_encode($respuesta['result']));
-        // Me retorna el status -> 200 OK (me trae el usuario "el cual existe") o 404 en caso de ser null (usuario inexistente)
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
+        $user_id = $request -> getAttribute('id');
+
+        $respuesta = $juegoController->getJuego($user_id);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
     });
 
-    // da de alta un nuevo juego. Solo lo puede hacer un usuario logueado y que sea administrador.
+    // Da de alta un nuevo juego. Solo lo puede hacer un usuario logueado y que sea administrador.
     $app->post('/juego', function(Request $request, Response $response){
 
         $datos_usuario = $request->getParsedBody();
