@@ -174,32 +174,58 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
     //  Crear una nueva calificación. Solo lo puede hacer unusuario logueado.
     $app->post('/calificacion', function(Request $request, Response $response){
 
-        $datos_usuario = $request->getParsedBody();
+        $calificacionController = new calificacionController();
 
-        // insert a la base
+        $datos_calificacion = $request->getParsedBody();
+
+        $estrellas = $datos_calificacion['estrellas'];
+        $id_usuario = $datos_calificacion['usuario_id'];
+        $id_juego = $datos_calificacion['juego_id'];
+
+        $respuesta = $calificacionController->createCalification($estrellas, $id_usuario, $id_juego);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
     });
 
-    /* 
-    PUT /calificacion/{id}: Editar una calificación existente. Solo lo puede hacer un usuario logueado.
-        ○ Éxito: Código 200 OK, se actualiza el valor de puntuación del juego
-        solo si el token coincide con el almacenado para ese usuario y el token no está vencido.
-        ○ Fallo: Código de estado 401 Unauthorized, con un mensaje de error.
-    */
+    // Editar una calificación existente. Solo lo puede hacer un usuario logueado.
     $app->put('/calificacion/{id}', function(Request $request, Response $response){
 
-        $user_id = $request -> getAttribute('id');
+        $calificacionController = new calificacionController();
+        
+        $calificacion_id = $request -> getAttribute('id');
+        $datos_calificacion = $request->getParsedBody(5);
 
+        $estrellas = $datos_calificacion['estrellas'];
+        $id_usuario = $datos_calificacion['usuario_id'];
+        $id_juego = $datos_calificacion['juego_id'];
+        
         // put a la base
+
+        $respuesta = $calificacionController->editCalificacion($calificacion_id, $estrellas, $id_usuario, $id_juego);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
     });
 
     // Eliminar una calificación. Solo lo puede hacer un usuario logueado.
     $app->delete('/calificacion/{id}', function(Request $request, Response $response){
 
-        $user_id = $request -> getAttribute('id');
+        $calificacionController = new calificacionController();
+        
+        $calificacion_id = $request -> getAttribute('id');
 
         // delete a la base
+
+        $respuesta = $calificacionController->deleteCalification($calificacion_id);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
     });
 ?>

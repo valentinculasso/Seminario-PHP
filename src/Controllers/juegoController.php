@@ -29,11 +29,6 @@ class juegoController {
     }
 
     // agregarJuego(): agrega un nuevo juego a la base de datos. Recibe como parametros los campos del juego.
-    /* En el alta y modificación de un juego se debe verificar que el nombre del juego no
-    tenga más de 45 caracteres y que la clasificación por edad sea una de las tres
-    válidas ('ATP', '+13', '+18'). Además, se debe convertir la imagen a base 64 para
-    almacenarla en la base de datos.
-    */
     public function agregarJuego($nombre_juego, $descripcion, $imagen, $clasificacion_edad){
         try{
             $conn = conectarbd();
@@ -113,6 +108,7 @@ class juegoController {
                 // $log = verificarLogin($id);
                 $log = 1; // Le asigno true para probar (pd: funciona)
                 if($log){
+                    // SOLO LO PUEDO ELIMINAR SI NO TIENE CALIFICACIONES, FALTA el chequeo
                     $sql = "DELETE FROM `juego` WHERE id = $id";
                     $response = mysqli_query($conn, $sql);
                     if(!$response){

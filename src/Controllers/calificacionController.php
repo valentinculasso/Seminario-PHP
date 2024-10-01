@@ -1,22 +1,91 @@
 <?php
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+    use Psr\Http\Message\ResponseInterface as Response;
+    use Psr\Http\Message\ServerRequestInterface as Request;
 
     class calificacionController {
 
         // createCalification($estrellas, $userID, $juegoID): Crea una nueva calificacion. Recibe como parametros las estrellas, id del usuario y id del juego.
         public function createCalification($estrellas, $userID, $juegoID){
-
+            try{
+                $conn = conectarbd();
+                // para saber si esta logeado puedo usar el userID
+                if(verificarLogin($userID)){
+                    $sql = "INSERT INTO `calificacion` (`estrellas`, `usuario_id`, `juego_id`) VALUES ('$estrellas', '$userID', '$juegoID')";
+                    $response = mysqli_query($conn, $sql);
+                    if(!$response){
+                        $respuesta = ['status'=> 404, 'result'=>"La calificacion no se ha creado"];
+                    }
+                    else{
+                        $respuesta = ['status'=> 200, 'result'=>"La calificacion se ha creado con exito"];
+                    }
+                }
+                else{
+                    $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
+                }
+                $conn = desconectarbd($conn);
+            }
+            catch(Exception $e){
+                $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+            }
+            return $respuesta;
         }
 
-        // editCalification($estrellas): Edita una calificacion existente. Recibe como parametros el id de la calificacion y las estrellas de la nueva calificacion
-        public function editCalification($id, $estrellas){
-
+        // editCalification($id_calificacion, $estrellas, $id_usuario, $id_juego): Edita una calificacion existente. Recibe como parametros 
+        public function editCalificacion($id_calificacion, $estrellas, $id_usuario, $id_juego){
+            try{
+                $conn = conectarbd();
+                // Chequeo que el usuario se encuentre logeado
+                if(verificarLogin($id_usuario)){
+                    $sql = "UPDATE `calificacion` SET estrellas = '$estrellas', usuario_id = '$id_usuario', juego_id = '$id_juego' WHERE id = '$id_calificacion'"; 
+                    // DUDAS: id_juego no lo uso, xq modifico la calificacion (estrellas) no el juego, y el id del usuario seguiria siendo el mismo al igual que el id del juego
+                    $response = mysqli_query($conn, $sql);
+                    if(!$response){
+                        $respuesta =  ['status'=> 404, 'result'=>"La calificacion no existe"];
+                    }
+                    else{
+                        $respuesta = ['status'=>200, 'result'=>"Se ha editado la calificacion correctamente"];
+                    }
+                }
+                else{
+                    $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
+                }
+                $conn = desconectarbd($conn);
+            }
+            catch(Exception $e){
+                $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+            }
+            return $respuesta;
         }
 
         // deleteCalification($id): Elimina una calificacion. Recibe como parametros el id de la calificacion.
-        public function deleteCalification($id){
-
+        public function deleteCalification($id_calificacion){
+            try{
+                $conn = conectarbd();
+                // Chequeo que el usuario se encuentre logeado, esto lo puedo hacer ya que el id_calificacion en la bd tiene guardado el id que la creo por lo cual
+                // debo chequear si ese id esta logeado, ya que se supone que solo el puede eliminarla
+                $sql = "SELECT * FROM `calificacion` WHERE id = $id_calificacion";
+                $response = mysqli_query($conn, $sql);
+                $calificacion = $response->fetch_assoc();
+                $id_usuario = $calificacion['usuario_id'];
+                if(verificarLogin($id_usuario)){
+                    $sql = "DELETE FROM `calificacion` WHERE id = $id_calificacion";
+                    $response = mysqli_query($conn, $sql);
+                    if(!$response){
+                        $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado la calificacion"];
+                    }
+                    else{
+                        $respuesta = ['status'=>200, 'result'=>"Se ha eliminado la calificacion correctamente"];
+                    }
+                }
+                else{
+                    $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
+                }
+                $conn = desconectarbd($conn);
+            }
+            catch(Exception $e){
+                $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+            }
+            return $respuesta;
         }
 
     }
