@@ -78,7 +78,8 @@ class usuarioController {
                 $fecha = new DateTime(); // Creo variable fecha instanciando DateTime
                 $token = '{
                     "id":'.  $user['id'] .',
-                    "date":'. $fecha->format('y-m-d H:i') .'
+                    "date":"'. $fecha->format('y-m-d H:i') .'",
+                    "admin": '. $user['es_admin'] .'
                 }';
                 $token_encode = base64_encode($token); // le aplico base64 al token
                 // Fin crear token
@@ -133,26 +134,19 @@ class usuarioController {
     }
 
     // editUser($id): Edita un usuario existente. Recibe como parametro el ID del usuario.
-    public function editUser($id){
+    public function editUser($id, $nombre, $clave, $admin){
         try{
-            // Chequeo que el usuario se encuentre logeado
-            $log = verificarLogin($id);
-            if($log){
-                $conn = conectarbd();
-                $sql = "SELECT * FROM `usuario` WHERE id = $id";
-                $result = mysqli_query($conn, $sql);
-                $response = mysqli_fetch_array($result);
-                if(!$response){
-                    $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
-                }
-                else{
-                    $respuesta = ['status'=>200, 'result'=>$response];
-                }
-                $conn = desconectarbd($conn);
+            $conn = conectarbd();
+            $sql = "UPDATE  `usuario` SET nombre_usuario = '$nombre', clave = '$clave', es_admin = '$admin' WHERE id = $id";
+            $result = mysqli_query($conn, $sql);
+            $response = mysqli_fetch_array($result);
+            if(!$response){
+                $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
             }
             else{
-                $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
+                $respuesta = ['status'=>200, 'result'=>$response];
             }
+            $conn = desconectarbd($conn);
         }
         catch(Exception $e){
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
@@ -163,24 +157,17 @@ class usuarioController {
     // deleteUser($id): Elimina un usuario. Recibe como parametro el ID del usuario a eliminar.
     public function deleteUser($id){
         try{
-            // Chequeo que el usuario se encuentre logeado
-            $log = verificarLogin($id);
-            if($log){
-                $conn = conectarbd();
-                $sql = "DELETE FROM `usuario` WHERE id = $id";
-                $response = mysqli_query($conn, $sql);
-                if(!$response){
-                    $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado el usuario"];
-                }
-                else{
-                    $respuesta = ['status'=>200, 'result'=>"Se ha eliminado correctamente el usario"];
-                }
-
-                $conn = desconectarbd($conn);
+            $conn = conectarbd();
+            $sql = "DELETE FROM `usuario` WHERE id = $id";
+            $response = mysqli_query($conn, $sql);
+            if(!$response){
+                $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado el usuario"];
             }
             else{
-                $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
+                $respuesta = ['status'=>200, 'result'=>"Se ha eliminado correctamente el usario"];
             }
+
+            $conn = desconectarbd($conn);
         }
         catch(Exception $e){
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
@@ -192,24 +179,17 @@ class usuarioController {
     // getUser($id): Obtiene la informacion de un usuario especifico. Recibe como parametro el ID del usuario.
     public function getUser($id){
         try{
-            // Chequeo que el usuario se encuentre logeado
-            $log = verificarLogin($id);
-            if($log){
-                $conn = conectarbd();
-                $sql = "SELECT * FROM `usuario` WHERE id = $id";
-                $result = mysqli_query($conn, $sql);
-                $response = mysqli_fetch_array($result);
-                if(!$response){
-                    $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
-                }
-                else{
-                    $respuesta = ['status'=>200, 'result'=>$response];
-                }
-                $conn = desconectarbd($conn);
+            $conn = conectarbd();
+            $sql = "SELECT * FROM `usuario` WHERE id = $id";
+            $result = mysqli_query($conn, $sql);
+            $response = mysqli_fetch_array($result);
+            if(!$response){
+                $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
             }
             else{
-                $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
+                $respuesta = ['status'=>200, 'result'=>$response];
             }
+            $conn = desconectarbd($conn);
         }
         catch(Exception $e){
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];

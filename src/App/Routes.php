@@ -9,6 +9,59 @@ require_once __DIR__ . "/../Controllers/juegoController.php";
 
 require_once __DIR__ . "/../Controllers/calificacionController.php";
 
+    /* 
+    Consultas:
+    - Se listan 5 juegos por pagina, cada juego debe mostrar la puntuacion promedio. Se puede filtrar por nombre, plataforma y por clasificacion por edad
+
+        valorant / PC / ATP / puntuacion promedio
+    */
+
+    $authMiddleware = function($request, $handler){
+        $response = new Response(); 
+        $authHeader = $request->getHeader('Authorization');
+        if(!$authHeader){
+            $response->getBody()->write(json_encode(['error'=>'token no proporcionado']));
+            return $response->withStatus(401);
+        }
+        // Extraer el token en base64
+        $tokenBase64 = str_replace('Bearer ', '', $authHeader[0]);
+        // Decodificar token
+        $tokenDecoded = base64_decode($tokenBase64);
+        // verifico si la decodificacion fue exitosa
+        if(!$tokenDecoded){
+            $response->getBody()->write(json_encode(['error'=>'token invalido']));
+            return $response->withStatus(401);
+        }
+        // Hasta aca va bien si hago un echo me imprime el token
+
+        // echo $tokenDecoded;
+        $token = json_decode($tokenDecoded);
+
+        // aca si imprimo, no imprime nada imprime vacio por lo que la decodificacion falla
+        if(!$token || !isset($token->id) || !isset($token->date)){
+            $response->getBody()->write(json_encode(['error'=>'Formato del token invalido']));
+            return $response->withStatus(401);
+        }
+        // verifico si el token expiro
+        try{
+            $tokenDate = new DateTime($token->date);
+            $currentDate = new DateTime();
+            $tokenDate->modify('+1 hour');
+            // verifico si expiro
+            if($currentDate > $tokenDate){
+                $response->getBody()->write(json_encode(['error'=>'token expirado']));
+                return $response->withStatus(401);
+            }
+            // si el token es valido, se agrega el ID del usuario al request para que este disponible en los endpoints
+            $request = $request->withAttribute('es_admin', $token->admin);
+            return $handler->handle($request);
+        }
+        catch(Exception $e){
+            $response->getBody()->write(json_encode(['error'=>'Error al validar el token']));
+            return $response->withStatus(500);
+        }
+    };
+
     $app->post('/register', function(Request $request, Response $response){
 
         $userController = new usuarioController();
@@ -57,6 +110,8 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $usuarioController = new usuarioController();
 
+        $admin = $request->getAttribute('es_admin');
+        
         $datos_usuario = $request->getParsedBody();
 
         $nombre = $datos_usuario['nombre_usuario'];
@@ -68,14 +123,23 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-    });
+    })->add($authMiddleware);
 
     $app->put('/usuario/{id}', function(Request $request, Response $response){
 
-        $user_id = $request -> getAttribute('id');
+        $usuarioController = new usuarioController();
 
-        // put a la base -> aca tengo una duda, osea yo recibo el ID y a ese usuario lo voy a modificar. Pero en si como se que le tengo que modificar? 
-        // ya viene en el request o como es? Porque en el caso del delete recibo id y elimino el usuario con dicho id y listo
+        $user_id = $request -> getAttribute('id');
+        $datos_usuario = $request->getParsedBody();
+        $nombre = $datos_usuario['nombre_usuario'];
+        $clave = $datos_usuario['clave'];
+        $admin = $datos_usuario['es_admin'];
+
+        $respuesta = $usuarioController->editUser($user_id, $nombre, $clave, $admin);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-type', 'application/json')->withStatus($respuesta['status']);
 
     });
 
@@ -95,9 +159,25 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
     // Juegos -----------------------------------------------------------------------------
 
     //Listar los juegos de la página según los parámetrosde búsqueda incluyendo la puntuación promedio del juego.
-    $app->get('/juegos?pagina={pagina}&clasificacion={clasificacion}&texto={texto}&plataforma={plataforma}', function(Request $request, Response $response){
+    $app->get('/juegos', function(Request $request, Response $response){
+        // http request
+        $juegoController = new juegoController();
 
-        $datos_usuario = $request->getParsedBody(); 
+        $datos = $request->getQueryParams();
+        // foreach 
+        $texto = null;
+        $pagina = $datos['pagina'];
+        $clasificacion = $datos['clasificacion'];
+        if(isset($datos['texto'])){
+            $texto = $datos['texto']; // nombre de juego que busca por ejemplo si es "LO" -> podrian aparecer en el listado valorant, etc
+        }
+        $plataforma = $datos['plataforma'];
+
+        $respuesta = $juegoController->getPagina($pagina, $clasificacion, $texto, $plataforma);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
     });
 

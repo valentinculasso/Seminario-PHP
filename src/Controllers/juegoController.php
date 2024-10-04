@@ -32,8 +32,6 @@ class juegoController {
     public function agregarJuego($nombre_juego, $descripcion, $imagen, $clasificacion_edad){
         try{
             $conn = conectarbd();
-            // Aca debo agregar el chequeo de si el usuario esta logeado
-            // Luego debo chequear si es administrador
             if(strlen($nombre_juego) < 45){
                 if($clasificacion_edad = "ATP" || $clasificacion_edad = "+13" || $clasificacion_edad = "+18"){
                     $sql = "INSERT INTO `juego` (`nombre`, `descripcion`, `imagen`, `clasificacion_edad`) VALUES ('$nombre_juego', '$descripcion', '$imagen', '$clasificacion_edad')";
@@ -58,31 +56,13 @@ class juegoController {
     public function editarJuego($id, $nombre, $descripcion, $imagen, $clasificacion_edad){
         try{
             $conn = conectarbd();
-            $sql = "SELECT * FROM `usuario` WHERE id = $id"; // EL PROBLEMA ACA ES QUE ESTOY BUSCANDO EN LA TABLA USUARIOS CON EL ID DEL JUEGO OSEA CAIDO
+            $sql = "UPDATE `juego` SET nombre = '$nombre', descripcion = '$descripcion', imagen = '$imagen', clasificacion_edad = '$clasificacion_edad' WHERE id = '$id'";
             $response = mysqli_query($conn, $sql);
-            $user = $response->fetch_assoc();
-            // $admin = $user['es_admin'];
-            $admin = 1; // Le asigno true para probar (pd: funciona)
-            if($admin){
-                // Chequeo que el usuario se encuentre logeado
-                // $log = verificarLogin($id);
-                $log = 1; // Le asigno true para probar (pd: funciona)
-                if($log){
-                    $sql = "UPDATE `juego` SET nombre = '$nombre', descripcion = '$descripcion', imagen = '$imagen', clasificacion_edad = '$clasificacion_edad' WHERE id = '$id'";
-                    $response = mysqli_query($conn, $sql);
-                    if(!$response){
-                        $respuesta =  ['status'=> 404, 'result'=>"El juego no existe"];
-                    }
-                    else{
-                        $respuesta = ['status'=>200, 'result'=>"Se ha editado el juego correctamente"];
-                    }
-                }
-                else{
-                    $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
-                }
+            if(!$response){
+                $respuesta =  ['status'=> 404, 'result'=>"El juego no existe"];
             }
             else{
-                $respuesta = ['status'=> 401, 'result'=>"El usuario no es administrador"];
+                $respuesta = ['status'=>200, 'result'=>"Se ha editado el juego correctamente"];
             }
             $conn = desconectarbd($conn);
         }
@@ -98,34 +78,65 @@ class juegoController {
     public function eliminarJuego($id){
         try{
             $conn = conectarbd();
-            $sql = "SELECT * FROM `usuario` WHERE id = $id"; // EL PROBLEMA ACA ES QUE ESTOY BUSCANDO EN LA TABLA USUARIOS CON EL ID DEL JUEGO OSEA CAIDO
+            // SOLO LO PUEDO ELIMINAR SI NO TIENE CALIFICACIONES, FALTA el chequeo
+            $sql = "DELETE FROM `juego` WHERE id = $id";
             $response = mysqli_query($conn, $sql);
-            $user = $response->fetch_assoc();
-            // $admin = $user['es_admin'];
-            $admin = 1; // Le asigno true para probar (pd: funciona)
-            if($admin){
-                // Chequeo que el usuario se encuentre logeado
-                // $log = verificarLogin($id);
-                $log = 1; // Le asigno true para probar (pd: funciona)
-                if($log){
-                    // SOLO LO PUEDO ELIMINAR SI NO TIENE CALIFICACIONES, FALTA el chequeo
-                    $sql = "DELETE FROM `juego` WHERE id = $id";
-                    $response = mysqli_query($conn, $sql);
-                    if(!$response){
-                        $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado el juego"];
-                    }
-                    else{
-                        $respuesta = ['status'=>200, 'result'=>"Se ha eliminado el juego correctamente"];
-                    }
-                }
-                else{
-                    $respuesta = ['status'=> 401, 'result'=>"El usuario no se encuentra logeado"];
-                }
+            if(!$response){
+                $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado el juego"];
             }
             else{
-                $respuesta = ['status'=> 401, 'result'=>"El usuario no es administrador"];
+                $respuesta = ['status'=>200, 'result'=>"Se ha eliminado el juego correctamente"];
             }
             $conn = desconectarbd($conn);
+        }
+        catch(Exception $e){
+            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+        }   
+        return $respuesta;
+    }
+    /*  GET
+    /juegos?pagina={pagina}&clasificacion={clasificacion}&texto={texto}&pl
+    ataforma={plataforma} Listar los juegos de la página según los parámetros
+    de búsqueda incluyendo la puntuación promedio del juego.
+    */
+    public function getPagina($pagina, $clasificacion, $texto, $plataforma){
+        /* 
+        SELECT J.id, J.nombre nombre_juego, P.nombre nombre_plataforma FROM juego J INNER JOIN soporte S ON J.id=S.juego_id INNER JOIN plataforma P ON S.plataforma_id=P.id;
+
+        LIMIT cantidad de datos que trae la consulta  Y OFFSET a partir de donde
+        SELECT * FROM juego LIMIT 5 OFFSET 0;
+
+        SELECT J.id, J.nombre nombre_juego, P.nombre nombre_plataforma
+        FROM juego J
+        INNER JOIN soporte S ON J.id=S.juego_id
+        INNER JOIN plataforma P ON S.plataforma_id=P.id
+        LIMIT 5 OFFSET 0;
+        */
+        try{
+            $connection = conectarbd();
+            $pagina = ($pagina - 1) * 5;
+            if(!$clasificacion){
+
+                if(!$texto){
+
+                    if(!$plataforma){
+                        $sql = "SELECT * FROM 'juego' LIMIT 5 OFFSET 0";
+                    }
+                    else{
+                        $sql = "SELECT * FROM 'juego' WHERE plataforma = $plataforma LIMIT 5 OFFSET 0";
+                    }
+
+                }
+            }
+            $result = mysqli_query($connection, $sql);
+            $response = mysqli_fetch_array($result);
+            if(!$response){
+                $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
+            }
+            else{
+                $respuesta = ['status'=>200, 'result'=>$response];
+            }
+            $connection = desconectarbd($connection);
         }
         catch(Exception $e){
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
