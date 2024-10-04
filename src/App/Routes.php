@@ -14,6 +14,9 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
     - Se listan 5 juegos por pagina, cada juego debe mostrar la puntuacion promedio. Se puede filtrar por nombre, plataforma y por clasificacion por edad
 
         valorant / PC / ATP / puntuacion promedio
+
+
+        EN LOS ENDPOINT QUE PRECISAN CHEQUEAR SI ES ADMIN FALTA AGREGARLO
     */
 
     $authMiddleware = function($request, $handler){
@@ -95,17 +98,6 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
     // Usuarios
 
-    $app->get('/usuario/{id}',function(Request $request, Response $response){
-
-        $usuarioController = new usuarioController();
-        $user_id = $request -> getAttribute('id');
-
-        $respuesta = $usuarioController->getUser($user_id);
-
-        $response->getBody()->write(json_encode($respuesta['result']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-    });
-
     $app->post('/usuario', function(Request $request, Response $response){
 
         $usuarioController = new usuarioController();
@@ -122,6 +114,17 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+    });
+
+    $app->get('/usuario/{id}',function(Request $request, Response $response){
+
+        $usuarioController = new usuarioController();
+        $user_id = $request -> getAttribute('id');
+
+        $respuesta = $usuarioController->getUser($user_id);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
     })->add($authMiddleware);
 
@@ -141,7 +144,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         return $response->withHeader('Content-type', 'application/json')->withStatus($respuesta['status']);
 
-    });
+    })->add($authMiddleware);
 
     $app->delete('/usuario/{id}', function(Request $request, Response $response){
 
@@ -154,24 +157,33 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-    });
+    })->add($authMiddleware);
 
     // Juegos -----------------------------------------------------------------------------
 
     //Listar los juegos de la página según los parámetrosde búsqueda incluyendo la puntuación promedio del juego.
     $app->get('/juegos', function(Request $request, Response $response){
-        // http request
+        
         $juegoController = new juegoController();
 
         $datos = $request->getQueryParams();
-        // foreach 
+        // cambiar foreach 
         $texto = null;
-        $pagina = $datos['pagina'];
-        $clasificacion = $datos['clasificacion'];
-        if(isset($datos['texto'])){
-            $texto = $datos['texto']; // nombre de juego que busca por ejemplo si es "LO" -> podrian aparecer en el listado valorant, etc
+        $clasificacion = null;
+        $pagina = null;
+        $plataforma = null;
+        if(isset($datos['pagina'])){
+            $pagina = $datos['pagina'];
         }
-        $plataforma = $datos['plataforma'];
+        if(isset($datos['clasificacion'])){
+            $clasificacion = $datos['clasificacion'];
+        }
+        if(isset($datos['texto'])){
+            $texto = $datos['texto'];
+        }
+        if(isset($datos['plataforma'])){
+            $plataforma = $datos['plataforma'];
+        }
 
         $respuesta = $juegoController->getPagina($pagina, $clasificacion, $texto, $plataforma);
 
@@ -212,7 +224,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
-    });
+    })->add($authMiddleware);
 
     // actualiza los datos de un juego existente. Solo lo puede hacer un usuario logueado y que sea administrador.
     $app->put('/juego/{id}', function(Request $request, Response $response){
@@ -232,7 +244,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-    });
+    })->add($authMiddleware);
 
     //  borra el juego siempre y cuando no tenga calificaciones. Solo lo puede hacer un usuario logueado y que sea administrador.
     $app->delete('/juego/{id}', function(Request $request, Response $response){
@@ -247,7 +259,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
-    });
+    })->add($authMiddleware);
 
     // Calificaciones ---------------------------------------------------------------------
 
@@ -268,7 +280,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
-    });
+    })->add($authMiddleware);
 
     // Editar una calificación existente. Solo lo puede hacer un usuario logueado.
     $app->put('/calificacion/{id}', function(Request $request, Response $response){
@@ -276,7 +288,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $calificacionController = new calificacionController();
         
         $calificacion_id = $request -> getAttribute('id');
-        $datos_calificacion = $request->getParsedBody(5);
+        $datos_calificacion = $request->getParsedBody();
 
         $estrellas = $datos_calificacion['estrellas'];
         $id_usuario = $datos_calificacion['usuario_id'];
@@ -290,7 +302,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
-    });
+    })->add($authMiddleware);
 
     // Eliminar una calificación. Solo lo puede hacer un usuario logueado.
     $app->delete('/calificacion/{id}', function(Request $request, Response $response){
@@ -307,5 +319,5 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
-    });
+    })->add($authMiddleware);
 ?>
