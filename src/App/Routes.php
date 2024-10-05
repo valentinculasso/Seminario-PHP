@@ -157,13 +157,14 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+
     })->add($authMiddleware);
 
     // Juegos -----------------------------------------------------------------------------
 
     //Listar los juegos de la página según los parámetrosde búsqueda incluyendo la puntuación promedio del juego.
     $app->get('/juegos', function(Request $request, Response $response){
-        
+
         $juegoController = new juegoController();
 
         $datos = $request->getQueryParams();
@@ -211,18 +212,25 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $juegoController = new juegoController();
 
-        $datos_juego = $request->getParsedBody();
+        $admin = $request->getAttribute('es_admin');
+        if($admin){
+            $datos_juego = $request->getParsedBody();
 
-        $nombre = $datos_juego['nombre'];
-        $descripcion = $datos_juego['descripcion'];
-        $imagen = $datos_juego['imagen'];
-        $clasificacion_edad = $datos_juego['clasificacion_edad'];
+            $nombre = $datos_juego['nombre'];
+            $descripcion = $datos_juego['descripcion'];
+            $imagen = $datos_juego['imagen'];
+            $clasificacion_edad = $datos_juego['clasificacion_edad'];
 
-        $respuesta = $juegoController->agregarJuego($nombre, $descripcion, $imagen, $clasificacion_edad);
+            $respuesta = $juegoController->agregarJuego($nombre, $descripcion, $imagen, $clasificacion_edad);
 
-        $response->getBody()->write(json_encode($respuesta['result']));
+            $response->getBody()->write(json_encode($respuesta['result']));
 
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+        }
+        else{
+            $response->getBody()->write(json_encode(['error'=>'token expirado']));
+            return $response->withStatus(401);
+        }
 
     })->add($authMiddleware);
 
@@ -231,19 +239,26 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $juegoController = new juegoController();
 
-        $juego_id = $request -> getAttribute('id');
-        $datos_juego = $request->getParsedBody();
+        $admin = $request->getAttribute('es_admin');
+        if($admin){
+            $juego_id = $request -> getAttribute('id');
+            $datos_juego = $request->getParsedBody();
 
-        $nombre = $datos_juego['nombre'];
-        $descripcion = $datos_juego['descripcion'];
-        $imagen = $datos_juego['imagen'];
-        $clasificacion_edad = $datos_juego['clasificacion_edad'];
+            $nombre = $datos_juego['nombre'];
+            $descripcion = $datos_juego['descripcion'];
+            $imagen = $datos_juego['imagen'];
+            $clasificacion_edad = $datos_juego['clasificacion_edad'];
 
-        $respuesta = $juegoController->editarJuego($juego_id, $nombre, $descripcion, $imagen, $clasificacion_edad);
+            $respuesta = $juegoController->editarJuego($juego_id, $nombre, $descripcion, $imagen, $clasificacion_edad);
 
-        $response->getBody()->write(json_encode($respuesta['result']));
+            $response->getBody()->write(json_encode($respuesta['result']));
 
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+        }
+        else{
+            $response->getBody()->write(json_encode(['error'=>'token expirado']));
+            return $response->withStatus(401);
+        }
     })->add($authMiddleware);
 
     //  borra el juego siempre y cuando no tenga calificaciones. Solo lo puede hacer un usuario logueado y que sea administrador.
@@ -251,13 +266,20 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $juegoController = new juegoController();
 
-        $user_id = $request -> getAttribute('id');
+        $admin = $request->getAttribute('es_admin');
+        if($admin){
+            $user_id = $request -> getAttribute('id');
 
-        $respuesta = $juegoController->eliminarJuego($user_id);
+            $respuesta = $juegoController->eliminarJuego($user_id);
 
-        $response->getBody()->write(json_encode($respuesta['result']));
+            $response->getBody()->write(json_encode($respuesta['result']));
 
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+        }
+        else{
+            $response->getBody()->write(json_encode(['error'=>'token expirado']));
+            return $response->withStatus(401);
+        }
 
     })->add($authMiddleware);
 

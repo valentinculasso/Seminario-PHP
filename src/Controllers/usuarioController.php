@@ -139,12 +139,11 @@ class usuarioController {
             $conn = conectarbd();
             $sql = "UPDATE  `usuario` SET nombre_usuario = '$nombre', clave = '$clave', es_admin = '$admin' WHERE id = $id";
             $result = mysqli_query($conn, $sql);
-            $response = mysqli_fetch_array($result);
-            if(!$response){
+            if(!$result){
                 $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
             }
             else{
-                $respuesta = ['status'=>200, 'result'=>$response];
+                $respuesta = ['status'=>200, 'result'=>"Se han actualizado los datos del usuario"];
             }
             $conn = desconectarbd($conn);
         }
@@ -159,20 +158,17 @@ class usuarioController {
         try{
             $conn = conectarbd();
             $sql = "DELETE FROM `usuario` WHERE id = $id";
-            $response = mysqli_query($conn, $sql);
-            if(!$response){
-                $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado el usuario"];
+            mysqli_query($conn, $sql);
+            if (mysqli_affected_rows($conn) === 0) {
+                $respuesta = ['status' => 409, 'result' => "El id del usuario no existe"];
+            } else {
+                $respuesta = ['status' => 200, 'result' => "Se ha eliminado correctamente el usuario"];
             }
-            else{
-                $respuesta = ['status'=>200, 'result'=>"Se ha eliminado correctamente el usario"];
-            }
-
             $conn = desconectarbd($conn);
         }
         catch(Exception $e){
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
         }
-
         return $respuesta;
     }
 

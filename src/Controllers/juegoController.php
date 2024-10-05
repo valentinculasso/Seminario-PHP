@@ -142,7 +142,6 @@ class juegoController {
 
             $response = mysqli_fetch_all($result);
 
-            //$response = mysqli_fetch_array($result);
             if(!$response){
                 $respuesta = ['status'=> 404, 'result'=>"No hay juegos que mostrar"];
             }
