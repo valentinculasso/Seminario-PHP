@@ -9,16 +9,6 @@ require_once __DIR__ . "/../Controllers/juegoController.php";
 
 require_once __DIR__ . "/../Controllers/calificacionController.php";
 
-    /* 
-    Consultas:
-    - Se listan 5 juegos por pagina, cada juego debe mostrar la puntuacion promedio. Se puede filtrar por nombre, plataforma y por clasificacion por edad
-
-        valorant / PC / ATP / puntuacion promedio
-
-
-        EN LOS ENDPOINT QUE PRECISAN CHEQUEAR SI ES ADMIN FALTA AGREGARLO
-    */
-
     $authMiddleware = function($request, $handler){
         $response = new Response(); 
         $authHeader = $request->getHeader('Authorization');
@@ -168,7 +158,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $juegoController = new juegoController();
 
         $datos = $request->getQueryParams();
-        // cambiar foreach 
+        // cambiar por foreach 
         $texto = null;
         $clasificacion = null;
         $pagina = null;
@@ -241,9 +231,9 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $admin = $request->getAttribute('es_admin');
         if($admin){
-            $juego_id = $request -> getAttribute('id');
             $datos_juego = $request->getParsedBody();
 
+            $juego_id = $request -> getAttribute('id');
             $nombre = $datos_juego['nombre'];
             $descripcion = $datos_juego['descripcion'];
             $imagen = $datos_juego['imagen'];

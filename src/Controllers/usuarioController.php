@@ -160,7 +160,7 @@ class usuarioController {
             $sql = "DELETE FROM `usuario` WHERE id = $id";
             mysqli_query($conn, $sql);
             if (mysqli_affected_rows($conn) === 0) {
-                $respuesta = ['status' => 409, 'result' => "El id del usuario no existe"];
+                $respuesta = ['status' => 409, 'result' => "El usuario no ha sido eliminado porque id del usuario no existe"];
             } else {
                 $respuesta = ['status' => 200, 'result' => "Se ha eliminado correctamente el usuario"];
             }
