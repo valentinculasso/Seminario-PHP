@@ -53,6 +53,8 @@ class juegoController {
 
             $result = mysqli_query($connection, $sql);
 
+            // DE ACA PARA ABAJO ES LO QUE DEVUELVO A ROUTES
+
             $response = mysqli_fetch_all($result);
 
             if(!$response){

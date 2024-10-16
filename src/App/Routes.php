@@ -25,7 +25,6 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
             $response->getBody()->write(json_encode(['error'=>'token invalido']));
             return $response->withStatus(401);
         }
-        // Hasta aca va bien si hago un echo me imprime el token
 
         // echo $tokenDecoded;
         $token = json_decode($tokenDecoded);
@@ -46,7 +45,8 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
                 return $response->withStatus(401);
             }
             // si el token es valido, se agrega el ID del usuario al request para que este disponible en los endpoints
-            $request = $request->withAttribute('es_admin', $token->admin);
+            $request = $request->withAttribute('es_admin', $token->admin) // en el endpoint accedo al admin con: $admin = $request->getAttribute('es_admin');
+                               ->withAttribute('usuario_id', $token->id); // en el endpoint accedo al usuario id con: $user_id = $request->getAttribute('usuario_id');
             return $handler->handle($request);
         }
         catch(Exception $e){
@@ -65,6 +65,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $clave = $datos_usuario['clave'];
         
         $respuesta = $userController-> register($nombre, $clave);
+
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
@@ -122,17 +123,25 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $usuarioController = new usuarioController();
 
+        $user_id_logeado = $request -> getAttribute('usuario_id');
         $user_id = $request -> getAttribute('id');
+
         $datos_usuario = $request->getParsedBody();
         $nombre = $datos_usuario['nombre_usuario'];
         $clave = $datos_usuario['clave'];
         $admin = $datos_usuario['es_admin'];
 
-        $respuesta = $usuarioController->editUser($user_id, $nombre, $clave, $admin);
+        if($user_id_logeado == $user_id){
+            $respuesta = $usuarioController->editUser($user_id, $nombre, $clave, $admin);
 
-        $response->getBody()->write(json_encode($respuesta['result']));
+            $response->getBody()->write(json_encode($respuesta['result']));
 
-        return $response->withHeader('Content-type', 'application/json')->withStatus($respuesta['status']);
+            return $response->withHeader('Content-type', 'application/json')->withStatus($respuesta['status']);
+        }
+        else{
+            $response->getBody()->write(json_encode(['error'=>'No puede editar a otro usuario!']));
+            return $response->withStatus(401);
+        }
 
     })->add($authMiddleware);
 
@@ -140,13 +149,22 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $usuarioController = new usuarioController();
 
+        $user_id_logeado = $request ->getAttribute('usuario_id');
+
         $user_id = $request -> getAttribute('id');
 
-        $respuesta = $usuarioController->deleteUser($user_id);
+        // CONSULTAR SI ESTA BIEN HACER EL IF, Y CONSULTAR SI ESTA BIEN LA RESPUESTA
+        if($user_id_logeado == $user_id){
+            $respuesta = $usuarioController->deleteUser($user_id);
+        
+            $response->getBody()->write(json_encode($respuesta['result']));
 
-        $response->getBody()->write(json_encode($respuesta['result']));
-
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+        }
+        else{
+            $response->getBody()->write(json_encode(['error'=>'No puede eliminarse al usuario porque el id del usuario a eliminar no coincide con el id del usuario logeado']));
+            return $response->withStatus(409);
+        }
 
     })->add($authMiddleware);
 
@@ -280,13 +298,14 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $calificacionController = new calificacionController();
 
+        $user_id = $request->getAttribute('usuario_id'); // ID del usuario logeado
+
         $datos_calificacion = $request->getParsedBody();
 
         $estrellas = $datos_calificacion['estrellas'];
-        $id_usuario = $datos_calificacion['usuario_id'];
         $id_juego = $datos_calificacion['juego_id'];
 
-        $respuesta = $calificacionController->createCalification($estrellas, $id_usuario, $id_juego);
+        $respuesta = $calificacionController->createCalification($estrellas, $user_id, $id_juego);
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
@@ -299,16 +318,16 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $calificacionController = new calificacionController();
         
+        $user_id = $request->getAttribute('usuario_id'); // ID del usuario logeado
+
         $calificacion_id = $request -> getAttribute('id');
+
         $datos_calificacion = $request->getParsedBody();
 
         $estrellas = $datos_calificacion['estrellas'];
-        $id_usuario = $datos_calificacion['usuario_id'];
         $id_juego = $datos_calificacion['juego_id'];
-        
-        // put a la base
 
-        $respuesta = $calificacionController->editCalificacion($calificacion_id, $estrellas, $id_usuario, $id_juego);
+        $respuesta = $calificacionController->editCalificacion($calificacion_id, $estrellas, $id_juego, $user_id);
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
@@ -320,12 +339,14 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
     $app->delete('/calificacion/{id}', function(Request $request, Response $response){
 
         $calificacionController = new calificacionController();
+
+        $user_id = $request->getAttribute('usuario_id');
         
         $calificacion_id = $request -> getAttribute('id');
 
         // delete a la base
 
-        $respuesta = $calificacionController->deleteCalification($calificacion_id);
+        $respuesta = $calificacionController->deleteCalification($calificacion_id, $user_id);
 
         $response->getBody()->write(json_encode($respuesta['result']));
 

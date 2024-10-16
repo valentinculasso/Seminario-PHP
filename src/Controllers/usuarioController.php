@@ -116,13 +116,43 @@ class usuarioController {
     public function createUser($nombre, $clave, $admin){
         try{
             $conn = conectarbd();
-            $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '$admin')";
+            $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombre'";
             $response = mysqli_query($conn, $sql);
-            if(!$response){
-                $respuesta =  ['status'=> 401, 'result'=>"No se ha creado un nuevo usuario"];
+            if(!mysqli_num_rows($response)){
+                // Si entra aca el nombre de usuario no existe
+                        if (ctype_alnum($nombre)){ //Primero chequeo que la cadena sean TODOS alfanumericos
+                            if(!(strlen($nombre) > 6)or(!(strlen($nombre) < 20))){ // Luego chequeo que este en el rango de caracteres
+                                $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
+                            }
+                            else{
+                                // si entra aca el nombre de usuario es valido por lo que tengo que chequear ahora la clave
+                                if(!(strlen($clave) > 8)){
+                                    $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
+                                }
+                                else{
+                                    if (!preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave) || !preg_match('/[\W_]/', $clave)) {
+                                        $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
+                                    }
+                                    else{
+                                        // Al llegar aca, tanto el nombre de usuario como la contraseña son validos
+                                        $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '$admin')";
+                                        $response = mysqli_query($conn, $sql);
+                                        if(!$response){
+                                            $respuesta =  ['status'=> 401, 'result'=>"No se ha creado un nuevo usuario"];
+                                        }
+                                        else{
+                                            $respuesta = ['status'=>200, 'result'=>"Se ha creado un nuevo usario"];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else{
+                            $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no es alfanumerico."];
+                        }
             }
             else{
-                $respuesta = ['status'=>200, 'result'=>"Se ha creado un nuevo usario"];
+                $respuesta = ['status'=>401, 'result'=>'No se ha podido registrar ya que el nombre de usuario existe'];
             }
             $conn = desconectarbd($conn);
         }
@@ -137,13 +167,34 @@ class usuarioController {
     public function editUser($id, $nombre, $clave, $admin){
         try{
             $conn = conectarbd();
-            $sql = "UPDATE  `usuario` SET nombre_usuario = '$nombre', clave = '$clave', es_admin = '$admin' WHERE id = $id";
-            $result = mysqli_query($conn, $sql);
-            if(!$result){
-                $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
+            if (ctype_alnum($nombre)){ //Primero chequeo que la cadena sean TODOS alfanumericos
+                if(!(strlen($nombre) > 6)or(!(strlen($nombre) < 20))){ // Luego chequeo que este en el rango de caracteres
+                    $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
+                }
+                else{
+                    // Cuando llegue aca paso la validacion del nombre de usuario
+                    if(!(strlen($clave) > 8)){
+                        $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
+                    }
+                    else{
+                        if (!preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave) || !preg_match('/[\W_]/', $clave)) {
+                            $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
+                        }
+                        else{
+                            $sql = "UPDATE  `usuario` SET nombre_usuario = '$nombre', clave = '$clave', es_admin = '$admin' WHERE id = $id";
+                            $result = mysqli_query($conn, $sql);
+                            if(!$result){
+                                $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
+                            }
+                            else{
+                                $respuesta = ['status'=>200, 'result'=>"Se han actualizado los datos del usuario"];
+                            }
+                        }
+                    }
+                }
             }
             else{
-                $respuesta = ['status'=>200, 'result'=>"Se han actualizado los datos del usuario"];
+                $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no es alfanumerico."];
             }
             $conn = desconectarbd($conn);
         }
@@ -157,12 +208,19 @@ class usuarioController {
     public function deleteUser($id){
         try{
             $conn = conectarbd();
-            $sql = "DELETE FROM `usuario` WHERE id = $id";
-            mysqli_query($conn, $sql);
-            if (mysqli_affected_rows($conn) === 0) {
-                $respuesta = ['status' => 409, 'result' => "El usuario no ha sido eliminado porque id del usuario no existe"];
-            } else {
-                $respuesta = ['status' => 200, 'result' => "Se ha eliminado correctamente el usuario"];
+            $consultaSoporte = "SELECT * FROM `calificacion` WHERE usuario_id = $id";
+            $resultS = mysqli_query($conn, $consultaSoporte);
+            if(mysqli_num_rows($resultS) === 0){
+                $sql = "DELETE FROM `usuario` WHERE id = $id";
+                mysqli_query($conn, $sql);
+                if (mysqli_affected_rows($conn) === 0) {
+                    $respuesta = ['status' => 409, 'result' => "El usuario no ha sido eliminado porque id del usuario no existe"];
+                } else {
+                    $respuesta = ['status' => 200, 'result' => "Se ha eliminado correctamente el usuario"];
+                }
+            }
+            else{
+                $respuesta = ['status' => 409, 'result' => "El usuario no ha sido eliminado porque el usuario tiene calificaciones"];
             }
             $conn = desconectarbd($conn);
         }

@@ -25,17 +25,24 @@
         }
 
         // editCalification($id_calificacion, $estrellas, $id_usuario, $id_juego): Edita una calificacion existente. Recibe como parametros 
-        public function editCalificacion($id_calificacion, $estrellas, $id_usuario, $id_juego){
+        public function editCalificacion($id_calificacion, $estrellas, $id_juego, $user_log_id){
             try{
                 $conn = conectarbd();
-                $sql = "UPDATE `calificacion` SET estrellas = '$estrellas', usuario_id = '$id_usuario', juego_id = '$id_juego' WHERE id = '$id_calificacion'"; 
-                // DUDAS: id_juego no lo uso, xq modifico la calificacion (estrellas) no el juego, y el id del usuario seguiria siendo el mismo al igual que el id del juego
+                $sql = "SELECT * FROM `calificacion` WHERE id = $id_calificacion AND usuario_id = $user_log_id";
                 $response = mysqli_query($conn, $sql);
-                if(!$response){
-                    $respuesta =  ['status'=> 404, 'result'=>"La calificacion no existe"];
+                $result = mysqli_fetch_array($response);
+                if($result){
+                    $sql = "UPDATE `calificacion` SET estrellas = '$estrellas', juego_id = '$id_juego' WHERE id = '$id_calificacion'"; 
+                    mysqli_query($conn, $sql);
+                    if(mysqli_affected_rows($conn) === 0){
+                        $respuesta =  ['status'=> 404, 'result'=>"La calificacion no existe o no fue modificada"];
+                    }
+                    else{
+                        $respuesta = ['status'=>200, 'result'=>"Se ha editado la calificacion correctamente"];
+                    }
                 }
                 else{
-                    $respuesta = ['status'=>200, 'result'=>"Se ha editado la calificacion correctamente"];
+                    $respuesta =  ['status'=> 404, 'result'=>"La calificacion no puede ser modificada porque pertenece a otro usuario"];
                 }
                 $conn = desconectarbd($conn);
             }
@@ -46,23 +53,31 @@
         }
 
         // deleteCalification($id): Elimina una calificacion. Recibe como parametros el id de la calificacion.
-        public function deleteCalification($id_calificacion){
+        public function deleteCalification($id_calificacion, $user_log_id){
             try{
                 $conn = conectarbd();
-                $sql = "DELETE FROM `calificacion` WHERE id = $id_calificacion";
+                $sql = "SELECT * FROM `calificacion` WHERE id = $id_calificacion AND usuario_id = $user_log_id";
                 $response = mysqli_query($conn, $sql);
-                if(!$response){
-                    $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado la calificacion"];
+                $result = mysqli_fetch_array($response);
+                if($result){
+                    $sql = "DELETE FROM `calificacion` WHERE id = $id_calificacion";
+                    mysqli_query($conn, $sql);
+                    if(mysqli_affected_rows($conn) === 0){
+                        $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado la calificacion porque la calificacion no existe"];
+                    }
+                    else{
+                        $respuesta = ['status'=>200, 'result'=>"Se ha eliminado la calificacion correctamente"];
+                    }
                 }
                 else{
-                    $respuesta = ['status'=>200, 'result'=>"Se ha eliminado la calificacion correctamente"];
+                    $respuesta =  ['status'=> 409, 'result'=>"No se ha eliminado la calificacion porque pertenece a otro usuario"];
                 }
+                $conn = desconectarbd($conn);
             }
             catch(Exception $e){
                 $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
             }
             return $respuesta;
         }
-
     }
 ?>
