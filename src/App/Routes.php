@@ -176,25 +176,26 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $juegoController = new juegoController();
 
         $datos = $request->getQueryParams();
-        // cambiar por foreach 
-        $texto = null;
-        $clasificacion = null;
-        $pagina = null;
-        $plataforma = null;
-        if(isset($datos['pagina'])){
-            $pagina = $datos['pagina'];
-        }
-        if(isset($datos['clasificacion'])){
-            $clasificacion = $datos['clasificacion'];
-        }
-        if(isset($datos['texto'])){
-            $texto = $datos['texto'];
-        }
-        if(isset($datos['plataforma'])){
-            $plataforma = $datos['plataforma'];
+
+        $parametros = [
+            'pagina' => null,
+            'clasificacion' => null,
+            'texto' => null,
+            'plataforma' => null
+        ];
+
+        foreach ($datos as $clave => $value) {
+            if (array_key_exists($clave, $parametros)) {
+                $parametros[$clave] = $value;
+            }
         }
 
-        $respuesta = $juegoController->getPagina($pagina, $clasificacion, $texto, $plataforma);
+        $respuesta = $juegoController->getPagina(
+            $parametros['pagina'],
+            $parametros['clasificacion'],
+            $parametros['texto'],
+            $parametros['plataforma']
+        );
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
