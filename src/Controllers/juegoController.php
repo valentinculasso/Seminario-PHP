@@ -42,7 +42,6 @@ class juegoController {
             if (!empty($plataforma)) {
                 $conditions[] = "P.nombre IN ('$plataforma')"; // Agrega condición para la plataforma
             }
-
             if (count($conditions) > 0) {
                 $sql .= " WHERE " . implode(" AND ", $conditions);
             }
@@ -50,18 +49,20 @@ class juegoController {
             $sql .= " GROUP BY 
                         j.id, j.nombre
                     LIMIT 5 OFFSET $pagina";
-
+            
             $result = mysqli_query($connection, $sql);
 
             // DE ACA PARA ABAJO ES LO QUE DEVUELVO A ROUTES
 
-            $response = mysqli_fetch_all($result);
-
-            if(!$response){
+            $jsonData = array();
+            while($array = mysqli_fetch_assoc($result)){
+                $jsonData[]= $array;
+            }
+            if(!$jsonData){
                 $respuesta = ['status'=> 404, 'result'=>"No hay juegos que mostrar"];
             }
             else{
-                $respuesta = ['status'=>200, 'result'=>$response];
+                $respuesta = ['status'=>200, 'result'=>$jsonData];
             }
             $connection = desconectarbd($connection);
         }

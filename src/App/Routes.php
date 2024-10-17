@@ -131,17 +131,11 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $clave = $datos_usuario['clave'];
         $admin = $datos_usuario['es_admin'];
 
-        if($user_id_logeado == $user_id){
-            $respuesta = $usuarioController->editUser($user_id, $nombre, $clave, $admin);
+        $respuesta = $usuarioController->editUser($user_id, $nombre, $clave, $admin);
 
-            $response->getBody()->write(json_encode($respuesta['result']));
+        $response->getBody()->write(json_encode($respuesta['result']));
 
-            return $response->withHeader('Content-type', 'application/json')->withStatus($respuesta['status']);
-        }
-        else{
-            $response->getBody()->write(json_encode(['error'=>'No puede editar a otro usuario!']));
-            return $response->withStatus(401);
-        }
+        return $response->withHeader('Content-type', 'application/json')->withStatus($respuesta['status']);
 
     })->add($authMiddleware);
 
@@ -153,18 +147,11 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $user_id = $request -> getAttribute('id');
 
-        // CONSULTAR SI ESTA BIEN HACER EL IF, Y CONSULTAR SI ESTA BIEN LA RESPUESTA
-        if($user_id_logeado == $user_id){
-            $respuesta = $usuarioController->deleteUser($user_id);
-        
-            $response->getBody()->write(json_encode($respuesta['result']));
+        $respuesta = $usuarioController->deleteUser($user_id);
+    
+        $response->getBody()->write(json_encode($respuesta['result']));
 
-            return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-        }
-        else{
-            $response->getBody()->write(json_encode(['error'=>'No puede eliminarse al usuario porque el id del usuario a eliminar no coincide con el id del usuario logeado']));
-            return $response->withStatus(409);
-        }
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
     })->add($authMiddleware);
 
@@ -184,9 +171,9 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
             'plataforma' => null
         ];
 
-        foreach ($datos as $clave => $value) {
+        foreach ($datos as $clave => $valor) {
             if (array_key_exists($clave, $parametros)) {
-                $parametros[$clave] = $value;
+                $parametros[$clave] = $valor;
             }
         }
 
