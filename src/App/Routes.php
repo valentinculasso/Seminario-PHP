@@ -123,7 +123,6 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
         $usuarioController = new usuarioController();
 
-        $user_id_logeado = $request -> getAttribute('usuario_id');
         $user_id = $request -> getAttribute('id');
 
         $datos_usuario = $request->getParsedBody();
@@ -142,8 +141,6 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
     $app->delete('/usuario/{id}', function(Request $request, Response $response){
 
         $usuarioController = new usuarioController();
-
-        $user_id_logeado = $request ->getAttribute('usuario_id');
 
         $user_id = $request -> getAttribute('id');
 
@@ -170,13 +167,11 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
             'texto' => null,
             'plataforma' => null
         ];
-
-        foreach ($datos as $clave => $valor) {
+        foreach ($datos as $clave => $value) {
             if (array_key_exists($clave, $parametros)) {
-                $parametros[$clave] = $valor;
+                $parametros[$clave] = $value;
             }
         }
-
         $respuesta = $juegoController->getPagina(
             $parametros['pagina'],
             $parametros['clasificacion'],
