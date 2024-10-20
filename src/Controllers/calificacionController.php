@@ -8,13 +8,21 @@
         public function createCalification($estrellas, $userID, $juegoID){
             try{
                 $conn = conectarbd();
-                $sql = "INSERT INTO `calificacion` (`estrellas`, `usuario_id`, `juego_id`) VALUES ('$estrellas', '$userID', '$juegoID')";
-                $response = mysqli_query($conn, $sql);
-                if(!$response){
-                    $respuesta = ['status'=> 404, 'result'=>"La calificacion no se ha creado"];
+                $sql2 = "SELECT * FROM `juego` WHERE id = $juegoID";
+                $response2 = mysqli_query($conn, $sql2);
+                $result2 = mysqli_fetch_array($response2);
+                if($result2){
+                    $sql = "INSERT INTO `calificacion` (`estrellas`, `usuario_id`, `juego_id`) VALUES ('$estrellas', '$userID', '$juegoID')";
+                    $response = mysqli_query($conn, $sql);
+                    if(!$response){
+                        $respuesta = ['status'=> 404, 'result'=>"La calificacion no se ha creado"];
+                    }
+                    else{
+                        $respuesta = ['status'=> 200, 'result'=>"La calificacion se ha creado con exito"];
+                    }
                 }
                 else{
-                    $respuesta = ['status'=> 200, 'result'=>"La calificacion se ha creado con exito"];
+                    $respuesta =  ['status'=> 404, 'result'=>"La calificacion no puede ser creada porque el ID del juego ingresado no existe"];
                 }
                 $conn = desconectarbd($conn);
             }
@@ -32,17 +40,26 @@
                 $response = mysqli_query($conn, $sql);
                 $result = mysqli_fetch_array($response);
                 if($result){
-                    $sql = "UPDATE `calificacion` SET estrellas = '$estrellas', juego_id = '$id_juego' WHERE id = '$id_calificacion'"; 
-                    mysqli_query($conn, $sql);
-                    if(mysqli_affected_rows($conn) === 0){
-                        $respuesta =  ['status'=> 404, 'result'=>"La calificacion no existe o no fue modificada"];
+                    // Agrego esta consulta ya que si un usuario edita una calificacion con un id de juego que no existe en la tabla juegos, da error.
+                    $sql2 = "SELECT * FROM `juego` WHERE id = $id_juego";
+                    $response2 = mysqli_query($conn, $sql2);
+                    $result2 = mysqli_fetch_array($response2);
+                    if($result2){
+                        $sql = "UPDATE `calificacion` SET estrellas = '$estrellas', juego_id = '$id_juego' WHERE id = '$id_calificacion'"; 
+                        mysqli_query($conn, $sql);
+                        if(mysqli_affected_rows($conn) === 0){
+                            $respuesta =  ['status'=> 404, 'result'=>"La calificacion no existe o no fue modificada"];
+                        }
+                        else{
+                            $respuesta = ['status'=>200, 'result'=>"Se ha editado la calificacion correctamente"];
+                        }
                     }
                     else{
-                        $respuesta = ['status'=>200, 'result'=>"Se ha editado la calificacion correctamente"];
+                        $respuesta =  ['status'=> 404, 'result'=>"La calificacion no puede ser modificada porque el ID del juego ingresado no existe"];
                     }
                 }
                 else{
-                    $respuesta =  ['status'=> 404, 'result'=>"La calificacion no puede ser modificada porque pertenece a otro usuario"];
+                    $respuesta =  ['status'=> 404, 'result'=>"La calificacion no puede ser modificada porque no existe o pertenece a otro usuario"];
                 }
                 $conn = desconectarbd($conn);
             }

@@ -29,7 +29,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         // echo $tokenDecoded;
         $token = json_decode($tokenDecoded);
 
-        // aca si imprimo, no imprime nada imprime vacio por lo que la decodificacion falla
+        // aca si imprimo, no imprime nada imprime vacio por lo que la decodificacion falla por lo tanto hago la validacion para que el formato este bien
         if(!$token || !isset($token->id) || !isset($token->date)){
             $response->getBody()->write(json_encode(['error'=>'Formato del token invalido']));
             return $response->withStatus(401);
