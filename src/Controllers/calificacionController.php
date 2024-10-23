@@ -10,7 +10,9 @@
                 $conn = conectarbd();
                 $sql2 = "SELECT * FROM `juego` WHERE id = $juegoID";
                 $response2 = mysqli_query($conn, $sql2);
-                $result2 = mysqli_fetch_array($response2);
+                $result2 = mysqli_fetch_array($response2); // Aca tambien podria usar mysqli_nums_row que me trae el numero de filas, si no me trae ninguna no existe
+                                                           // Al hacer mysqli_fetch_Array si no existe el id del juego me trae NULL por lo tanto es valido tambien usarlo
+                                                           // Tambien podria haber hecho mysqli_fetch_Assoc pero es irrelevante
                 if($result2){
                     $sql = "INSERT INTO `calificacion` (`estrellas`, `usuario_id`, `juego_id`) VALUES ('$estrellas', '$userID', '$juegoID')";
                     $response = mysqli_query($conn, $sql);

@@ -9,6 +9,12 @@ class usuarioController {
 
     // register($nombreUsuario, $clave): registra un nuevo usuario. Recibe como parametros el nombre de usuario y la clave
     public function register($nombreUsuario, $clave){
+
+        $respuesta = $this -> createUser($nombreUsuario, $clave, 0);
+
+        return $respuesta;
+
+        /*
         if (ctype_alnum($nombreUsuario)){ //Primero chequeo que la cadena sean TODOS alfanumericos
             if(!(strlen($nombreUsuario) > 6)or(!(strlen($nombreUsuario) < 20))){ // Luego chequeo que este en el rango de caracteres
                 $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
@@ -32,10 +38,11 @@ class usuarioController {
             $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no es alfanumerico."];
         }
         return $respuesta;
+        */
     }
 
     // agregarUsuario($nombre, $clave): Si el usuario no existe agrega un nuevo usuario a la base de datos. Recibe como parametros el nombre de usuario y su contraseña
-    public function agregarUsuario($nombre, $clave){
+ /*   public function agregarUsuario($nombre, $clave){
         try{
             $conn = conectarbd();
             $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombre'";
@@ -61,7 +68,7 @@ class usuarioController {
             $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
         }
         return $respuesta;
-    }
+    } */
 
     // login($nombreUsuario, $clave): login a un usuario, se le generan sus respectivos tokens. Se recibe como parametro el nombre de usuario y su clave
     public function login($nombreUsuario, $clave){
@@ -138,7 +145,7 @@ class usuarioController {
                                         $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '$admin')";
                                         $response = mysqli_query($conn, $sql);
                                         if(!$response){
-                                            $respuesta =  ['status'=> 401, 'result'=>"No se ha creado un nuevo usuario"];
+                                            $respuesta =  ['status'=> 401, 'result'=>"No se ha podido crear el usuario"];
                                         }
                                         else{
                                             $respuesta = ['status'=>200, 'result'=>"Se ha creado un nuevo usario"];
@@ -182,8 +189,8 @@ class usuarioController {
                         }
                         else{
                             $sql = "UPDATE  `usuario` SET nombre_usuario = '$nombre', clave = '$clave', es_admin = '$admin' WHERE id = $id";
-                            $result = mysqli_query($conn, $sql);
-                            if(!$result){
+                            mysqli_query($conn, $sql);
+                            if(mysqli_affected_rows($conn) === 0){
                                 $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
                             }
                             else{
@@ -236,7 +243,7 @@ class usuarioController {
             $conn = conectarbd();
             $sql = "SELECT * FROM `usuario` WHERE id = $id";
             $result = mysqli_query($conn, $sql);
-            $response = mysqli_fetch_array($result);
+            $response = mysqli_fetch_assoc($result);
             if(!$response){
                 $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
             }

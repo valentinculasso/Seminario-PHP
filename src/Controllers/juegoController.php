@@ -78,7 +78,7 @@ class juegoController {
             $connection = conectarbd();
             $sql = "SELECT * FROM `juego` WHERE id = $id";
             $result = mysqli_query($connection, $sql);
-            $response = mysqli_fetch_array($result);
+            $response = mysqli_fetch_assoc($result);
             if(!$response){
                 $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
             }

@@ -64,7 +64,7 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $nombre = $datos_usuario['nombre_usuario'];
         $clave = $datos_usuario['clave'];
         
-        $respuesta = $userController-> register($nombre, $clave);
+        $respuesta = $userController-> createUser($nombre, $clave, 0);
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
