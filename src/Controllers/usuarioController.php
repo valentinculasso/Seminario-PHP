@@ -7,69 +7,6 @@ require_once __DIR__ . "/../App/Functions.php"; // require_once me permite usar 
 
 class usuarioController {
 
-    // register($nombreUsuario, $clave): registra un nuevo usuario. Recibe como parametros el nombre de usuario y la clave
-    public function register($nombreUsuario, $clave){
-
-        $respuesta = $this -> createUser($nombreUsuario, $clave, 0);
-
-        return $respuesta;
-
-        /*
-        if (ctype_alnum($nombreUsuario)){ //Primero chequeo que la cadena sean TODOS alfanumericos
-            if(!(strlen($nombreUsuario) > 6)or(!(strlen($nombreUsuario) < 20))){ // Luego chequeo que este en el rango de caracteres
-                $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
-            }
-            else{
-                // si entra aca el nombre de usuario es valido por lo que tengo que chequear ahora la clave
-                if(!(strlen($clave) > 8)){
-                    $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
-                }
-                else{
-                    if (!preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave) || !preg_match('/[\W_]/', $clave)) {
-                        $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
-                    }
-                    else{
-                        $respuesta = $this -> agregarUsuario($nombreUsuario, $clave);
-                    }
-                }
-            }
-        }
-        else{
-            $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no es alfanumerico."];
-        }
-        return $respuesta;
-        */
-    }
-
-    // agregarUsuario($nombre, $clave): Si el usuario no existe agrega un nuevo usuario a la base de datos. Recibe como parametros el nombre de usuario y su contraseña
- /*   public function agregarUsuario($nombre, $clave){
-        try{
-            $conn = conectarbd();
-            $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombre'";
-            $response = mysqli_query($conn, $sql);
-            if(!mysqli_num_rows($response)){
-                // Si entra aca el nombre de usuario no existe
-                $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '0')";
-                $response = mysqli_query($conn, $sql);
-                if(!$response){
-                    $respuesta =  ['status'=> 401, 'result'=>"No se ha creado un nuevo usuario"];
-                }
-                else{
-                    $respuesta = ['status'=>200, 'result'=>"Se ha registrado con exito"];
-                }
-            }
-            else{
-                // Si entra aca el nombre de usuario existe
-                $respuesta = ['status'=>401, 'result'=>'No se ha podido registrar ya que el nombre de usuario existe'];
-            }
-            $conn = desconectarbd($conn);
-        }
-        catch(Exception $e){
-            $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
-        }
-        return $respuesta;
-    } */
-
     // login($nombreUsuario, $clave): login a un usuario, se le generan sus respectivos tokens. Se recibe como parametro el nombre de usuario y su clave
     public function login($nombreUsuario, $clave){
         try{

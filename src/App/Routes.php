@@ -179,7 +179,12 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
             $parametros['plataforma']
         );
 
-        $response->getBody()->write(json_encode($respuesta['result']));
+        $responseData = [
+            'result' => $respuesta['result'],
+            'total' => $respuesta['total']
+        ];
+
+        $response->getBody()->write(json_encode($responseData));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 

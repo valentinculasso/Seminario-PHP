@@ -11,11 +11,29 @@ class juegoController {
     /juegos?pagina={pagina}&clasificacion={clasificacion}&texto={texto}&pl
     ataforma={plataforma} Listar los juegos de la página según los parámetros
     de búsqueda incluyendo la puntuación promedio del juego.
+
+        SELECT 
+            j.id AS id_juego, 
+            j.nombre AS nombre_juego,
+            P.nombre nombre_plataforma,
+            j.clasificacion_edad clasificacion_edad,
+            IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
+        FROM 
+            juego j
+        LEFT JOIN 
+            calificacion c ON j.id = c.juego_id
+        INNER JOIN soporte S ON j.id = S.juego_id
+        INNER JOIN plataforma P ON S.plataforma_id = P.id
+        GROUP BY
+            j.id
+        LIMIT 5 OFFSET 2;
+
     */
+
     public function getPagina($pagina, $clasificacion, $texto, $plataforma){
         try{
             $connection = conectarbd();
-            $pagina = ($pagina - 1) * 5;
+            $paginaActual = ($pagina - 1) * 5;
             // Consulta SQL normal sin ningun filtro
             $sql = "SELECT 
                         j.id AS id_juego, 
@@ -40,17 +58,31 @@ class juegoController {
                 $conditions[] = "j.clasificacion_edad = '$clasificacion'"; // Agrega condición para la clasificación
             }
             if (!empty($plataforma)) {
-                $conditions[] = "P.nombre IN ('$plataforma')"; // Agrega condición para la plataforma
+                $conditions[] = "P.nombre = '$plataforma'"; // Agrega condición para la plataforma
             }
             if (count($conditions) > 0) {
                 $sql .= " WHERE " . implode(" AND ", $conditions);
             }
 
-            $sql .= " GROUP BY 
-                        j.id, j.nombre
-                    LIMIT 5 OFFSET $pagina";
+            $sql .= "GROUP BY 
+                        j.id
+                    LIMIT 5 OFFSET $paginaActual";
             
             $result = mysqli_query($connection, $sql);
+
+            // SQL NUEVO
+            
+            // Consulta para contar el total de juegos (sin LIMIT y OFFSET)
+            $sqlCount = "SELECT COUNT(DISTINCT j.id) AS total FROM juego j 
+                        INNER JOIN soporte S ON j.id = S.juego_id
+                        INNER JOIN plataforma P ON S.plataforma_id = P.id ";
+
+            if (count($conditions) > 0) {
+                $sqlCount .= " WHERE " . implode(" AND ", $conditions);
+            }
+
+            $resultCount = mysqli_query($connection, $sqlCount);
+            $totalCount = mysqli_fetch_assoc($resultCount)['total'];
 
             // DE ACA PARA ABAJO ES LO QUE DEVUELVO A ROUTES
 
@@ -62,7 +94,11 @@ class juegoController {
                 $respuesta = ['status'=> 404, 'result'=>"No hay juegos que mostrar"];
             }
             else{
-                $respuesta = ['status'=>200, 'result'=>$jsonData];
+                $respuesta = [
+                    'status'=>200,
+                    'result'=>$jsonData,
+                    'total' => $totalCount
+                ];
             }
             $connection = desconectarbd($connection);
         }
@@ -76,7 +112,16 @@ class juegoController {
     public function getJuego($id){
         try{
             $connection = conectarbd();
-            $sql = "SELECT * FROM `juego` WHERE id = $id";
+            $sql = "SELECT 
+                        j.*, 
+                        IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
+                    FROM 
+                        juego j
+                    LEFT JOIN 
+                        calificacion c ON j.id = c.juego_id
+                    WHERE 
+                        j.id = $id";
+
             $result = mysqli_query($connection, $sql);
             $response = mysqli_fetch_assoc($result);
             if(!$response){
