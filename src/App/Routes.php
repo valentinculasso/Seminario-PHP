@@ -84,7 +84,12 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
 
         $respuesta = $usuarioController->login($nombre, $clave);
 
-        $response->getBody()->write(json_encode($respuesta['result']));
+        $responseData = [
+            'result' => $respuesta['result'],
+            'es_admin' => $respuesta['es_admin']
+        ];
+
+        $response->getBody()->write(json_encode($responseData));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
     });

@@ -39,7 +39,7 @@ class usuarioController {
                 $sql = "UPDATE `usuario` SET token = '$token_encode' , vencimiento_token = '$vencimientoTokenDate' WHERE id = '$id'";
                 $response = mysqli_query($conn, $sql);
                 // Deberia agregar un chequeo para saber si se ejecuto la consulta correctamente?
-                $respuesta = ['status'=>200, 'result'=>$token_encode];
+                $respuesta = ['status'=>200, 'result'=>$token_encode, 'es_admin'=>$user['es_admin']];
             }
             else{
                 // El nombre de usuario no existe
