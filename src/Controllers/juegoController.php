@@ -142,18 +142,43 @@ class juegoController {
     public function agregarJuego($nombre_juego, $descripcion, $imagen, $clasificacion_edad){
         try{
             $conn = conectarbd();
-            if(strlen($nombre_juego) < 45){
-                if($clasificacion_edad = "ATP" || $clasificacion_edad = "+13" || $clasificacion_edad = "+18"){
-                    $img64 = base64_encode($imagen);
-                    $sql = "INSERT INTO `juego` (`nombre`, `descripcion`, `imagen`, `clasificacion_edad`) VALUES ('$nombre_juego', '$descripcion', '$img64', '$clasificacion_edad')";
+            if(strlen($nombre_juego) < 45 && ($clasificacion_edad == "ATP" || $clasificacion_edad == "+13" || $clasificacion_edad == "+18")){
+
+                    // ACA NO ESTOY CHEQUEANDO SI EL JUEGO EXISTE... POR LO QUE SE PUEDEN AGREGAR REPETIDOS
+                    $sql = "SELECT * FROM `juego` WHERE nombre = '$nombre_juego'";
                     $response = mysqli_query($conn, $sql);
-                    if(!$response){
-                        $respuesta = ['status'=> 404, 'result'=>"El juego no se ha añadido"];
+                    if(mysqli_num_rows($response) === 0){
+                        $img64 = base64_encode($imagen);
+                        $sql = "INSERT INTO `juego` (`nombre`, `descripcion`, `imagen`, `clasificacion_edad`) VALUES ('$nombre_juego', '$descripcion', '$img64', '$clasificacion_edad')";
+                        $response = mysqli_query($conn, $sql);
+                        if(!$response){
+                            $respuesta = ['status'=> 404, 'result'=>"El juego no se ha añadido"];
+                        }
+                        else{
+                            $sql2 = "SELECT * FROM `juego` WHERE nombre = '$nombre_juego'";
+                            $response2 = mysqli_query($conn, $sql2);
+                            if ($response2 && mysqli_num_rows($response2) > 0) {
+                                $id = mysqli_fetch_assoc($response2)['id'];
+                                $respuesta = [
+                                    'status'=> 200,
+                                    'result'=>"El juego se ha agregado con exito",
+                                    'juego_id'=> $id
+                                ];
+                            } else {
+                                $respuesta = ['status'=> 404, 'result'=>"No se encontró el juego después de agregarlo."];
+                            }
+                        }
                     }
                     else{
-                        $respuesta = ['status'=> 200, 'result'=>"El juego se ha agregado con exito"];
+                        $respuesta = [
+                            'status'=> 404,
+                            'result'=>"El juego ya existe!",
+                            'juego_id' => null
+                        ];
                     }
-                }
+            }
+            else{
+                $respuesta = ['status'=> 401, 'result'=>"El nombre del juego ingresado no cumple con los requisitos.", 'juego_id' => null];
             }
             $conn = desconectarbd($conn);
         }

@@ -9,6 +9,8 @@ require_once __DIR__ . "/../Controllers/juegoController.php";
 
 require_once __DIR__ . "/../Controllers/calificacionController.php";
 
+require_once __DIR__ . "/../Controllers/soporteController.php";
+
     $authMiddleware = function($request, $handler){
         $response = new Response(); 
         $authHeader = $request->getHeader('Authorization');
@@ -214,17 +216,25 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
             $nombre = $datos_juego['nombre'];
             $descripcion = $datos_juego['descripcion'];
-            $imagen = $datos_juego['imagen'];
+            $imagen = $datos_juego['descripcion'];
             $clasificacion_edad = $datos_juego['clasificacion_edad'];
+
 
             $respuesta = $juegoController->agregarJuego($nombre, $descripcion, $imagen, $clasificacion_edad);
 
-            $response->getBody()->write(json_encode($respuesta['result']));
+            // aca deberia ver si por ejemplo el juego ya existe me va a traer en juego_id null y puede dar error o conflicto?
+
+            $responseData = [
+                'result' => $respuesta['result'],
+                'juego_id' => $respuesta['juego_id']
+            ];
+
+            $response->getBody()->write(json_encode($responseData));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
         }
         else{
-            $response->getBody()->write(json_encode(['error'=>'token expirado']));
+            $response->getBody()->write(json_encode(['error'=>'El usuario no es administrador']));
             return $response->withStatus(401);
         }
 
@@ -339,6 +349,31 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
         $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+
+    })->add($authMiddleware);
+
+    // Endpoints Soporte
+
+    // Agrega un soporte (de un juego). Solo lo puede hacer un usuario logeado y que sea administrador
+    $app ->post('/soporte', function(Request $request, Response $response){
+
+        $admin = $request->getAttribute('es_admin');
+        if($admin){
+            $soporteController = new soporteController();
+
+            $datos = $request->getParsedBody();
+            $juego_id = $datos['juego_id'];
+            $plataforma_id = $datos['plataforma_id'];
+
+            $respuesta = $soporteController->agregarSoporte($juego_id, $plataforma_id);
+
+            return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+        }
+        else{
+            $response->getBody()->write(json_encode(['error'=>'El usuario no es administrador']));
+            return $response->withStatus(401);
+        }
+        return $response;
 
     })->add($authMiddleware);
 ?>
