@@ -143,8 +143,6 @@ class juegoController {
         try{
             $conn = conectarbd();
             if(strlen($nombre_juego) < 45 && ($clasificacion_edad == "ATP" || $clasificacion_edad == "+13" || $clasificacion_edad == "+18")){
-
-                    // ACA NO ESTOY CHEQUEANDO SI EL JUEGO EXISTE... POR LO QUE SE PUEDEN AGREGAR REPETIDOS
                     $sql = "SELECT * FROM `juego` WHERE nombre = '$nombre_juego'";
                     $response = mysqli_query($conn, $sql);
                     if(mysqli_num_rows($response) === 0){
@@ -152,7 +150,7 @@ class juegoController {
                         $sql = "INSERT INTO `juego` (`nombre`, `descripcion`, `imagen`, `clasificacion_edad`) VALUES ('$nombre_juego', '$descripcion', '$img64', '$clasificacion_edad')";
                         $response = mysqli_query($conn, $sql);
                         if(!$response){
-                            $respuesta = ['status'=> 404, 'result'=>"El juego no se ha añadido"];
+                            $respuesta = ['status'=> 404, 'result'=>"El juego no se ha añadido", 'juego_id' => null];
                         }
                         else{
                             $sql2 = "SELECT * FROM `juego` WHERE nombre = '$nombre_juego'";
@@ -165,16 +163,12 @@ class juegoController {
                                     'juego_id'=> $id
                                 ];
                             } else {
-                                $respuesta = ['status'=> 404, 'result'=>"No se encontró el juego después de agregarlo."];
+                                $respuesta = ['status'=> 404, 'result'=>"No se encontró el juego después de agregarlo.", 'juego_id' => null];
                             }
                         }
                     }
                     else{
-                        $respuesta = [
-                            'status'=> 404,
-                            'result'=>"El juego ya existe!",
-                            'juego_id' => null
-                        ];
+                        $respuesta = ['status'=> 404, 'result'=>"El juego ya existe!", 'juego_id' => null];
                     }
             }
             else{
