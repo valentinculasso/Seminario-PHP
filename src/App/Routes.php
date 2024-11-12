@@ -221,7 +221,7 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
 
             $nombre = $datos_juego['nombre'];
             $descripcion = $datos_juego['descripcion'];
-            $imagen = $datos_juego['descripcion'];
+            $imagen = $datos_juego['imagen'];
             $clasificacion_edad = $datos_juego['clasificacion_edad'];
 
 

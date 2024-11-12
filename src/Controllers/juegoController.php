@@ -146,6 +146,7 @@ class juegoController {
                     $sql = "SELECT * FROM `juego` WHERE nombre = '$nombre_juego'";
                     $response = mysqli_query($conn, $sql);
                     if(mysqli_num_rows($response) === 0){
+                        // faltaria trabajar la imagen ?
                         $img64 = base64_encode($imagen);
                         $sql = "INSERT INTO `juego` (`nombre`, `descripcion`, `imagen`, `clasificacion_edad`) VALUES ('$nombre_juego', '$descripcion', '$img64', '$clasificacion_edad')";
                         $response = mysqli_query($conn, $sql);
