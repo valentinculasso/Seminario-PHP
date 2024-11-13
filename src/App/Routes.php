@@ -30,7 +30,6 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
 
         // echo $tokenDecoded;
         $token = json_decode($tokenDecoded);
-
         // aca si imprimo, no imprime nada imprime vacio por lo que la decodificacion falla por lo tanto hago la validacion para que el formato este bien
         if(!$token || !isset($token->id) || !isset($token->date)){
             $response->getBody()->write(json_encode(['error'=>'Formato del token invalido']));
@@ -86,7 +85,8 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
 
         $responseData = [
             'result' => $respuesta['result'],
-            'es_admin' => $respuesta['es_admin']
+            'es_admin' => $respuesta['es_admin'],
+            'vencimiento_token' => $respuesta['vencimiento_token']
         ];
 
         $response->getBody()->write(json_encode($responseData));

@@ -20,6 +20,7 @@ class usuarioController {
 
                 // Crear token
                 $fecha = new DateTime(); // Creo variable fecha instanciando DateTime
+                $fecha->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
                 $token = '{
                     "id":'.  $user['id'] .',
                     "date":"'. $fecha->format('y-m-d H:i') .'",
@@ -31,7 +32,7 @@ class usuarioController {
                 $id = $user['id']; // Creo variable $id y le asigno el id del usuario que se esta logeando
 
                 // Crear vencimiento_token (es un DateTime en mi base de datos)
-                $fechaVencimiento = new DateTime();
+                $fechaVencimiento = $fecha;
                 $fechaVencimiento->modify('+1 hour'); // Sumar 1 hora a la fecha actual
                 $vencimientoTokenDate = $fechaVencimiento->format('Y-m-d H:i:s');
                 // Fin crear vencimiento_token
@@ -39,11 +40,11 @@ class usuarioController {
                 $sql = "UPDATE `usuario` SET token = '$token_encode' , vencimiento_token = '$vencimientoTokenDate' WHERE id = '$id'";
                 $response = mysqli_query($conn, $sql);
                 // Deberia agregar un chequeo para saber si se ejecuto la consulta correctamente?
-                $respuesta = ['status'=>200, 'result'=>$token_encode, 'es_admin'=>$user['es_admin']];
+                $respuesta = ['status'=>200, 'result'=>$token_encode, 'es_admin'=>$user['es_admin'], "vencimiento_token"=>$vencimientoTokenDate];
             }
             else{
                 // El nombre de usuario no existe
-                $respuesta = ['status'=>401, 'result'=>'Credenciales incorrectas'];
+                $respuesta = ['status'=>401, 'result'=>'El nombre de usuario no existe o credenciales incorrectas'];
             }
             $conn = desconectarbd($conn);
         }
