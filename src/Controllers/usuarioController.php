@@ -3,7 +3,7 @@
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-require_once __DIR__ . "/../App/Functions.php"; // require_once me permite usar la carpeta functions en todas las clases Controller
+require_once __DIR__ . "/../App/Functions.php";
 
 class usuarioController {
 
@@ -17,30 +17,29 @@ class usuarioController {
             if(mysqli_num_rows($response) > 0){
                 // Si entra aca el nombre de usuario y clave existen y son validas
                 $user = mysqli_fetch_assoc($response);
-
                 // Crear token
-                $fecha = new DateTime(); // Creo variable fecha instanciando DateTime
-                $fecha->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
+                $fechaVencimientoToken = new DateTime();
+                $fechaVencimientoToken->modify('+1 hour');
+                $fechaVencimientoToken->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
+                $FechaVencimiento = $fechaVencimientoToken->format('Y-m-d H:i:s');
                 $token = '{
                     "id":'.  $user['id'] .',
-                    "date":"'. $fecha->format('y-m-d H:i') .'",
+                    "date":"'. $FechaVencimiento .'",
                     "admin": '. $user['es_admin'] .'
                 }';
                 $token_encode = base64_encode($token); // le aplico base64 al token
                 // Fin crear token
 
-                $id = $user['id']; // Creo variable $id y le asigno el id del usuario que se esta logeando
+                $id = $user['id'];
 
-                // Crear vencimiento_token (es un DateTime en mi base de datos)
-                $fechaVencimiento = $fecha;
-                $fechaVencimiento->modify('+1 hour'); // Sumar 1 hora a la fecha actual
-                $vencimientoTokenDate = $fechaVencimiento->format('Y-m-d H:i:s');
-                // Fin crear vencimiento_token
-
-                $sql = "UPDATE `usuario` SET token = '$token_encode' , vencimiento_token = '$vencimientoTokenDate' WHERE id = '$id'";
+                $sql = "UPDATE `usuario` SET token = '$token_encode' , vencimiento_token = '$FechaVencimiento' WHERE id = '$id'";
                 $response = mysqli_query($conn, $sql);
-                // Deberia agregar un chequeo para saber si se ejecuto la consulta correctamente?
-                $respuesta = ['status'=>200, 'result'=>$token_encode, 'es_admin'=>$user['es_admin'], "vencimiento_token"=>$vencimientoTokenDate];
+                if($response){
+                    $respuesta = ['status'=>200, 'result'=>$token_encode];
+                }
+                else{
+                    $respuesta = ['status'=>401, 'result'=>'El nombre de usuario no existe o credenciales incorrectas'];
+                }
             }
             else{
                 // El nombre de usuario no existe
@@ -64,36 +63,24 @@ class usuarioController {
             $sql = "SELECT * FROM `usuario` WHERE nombre_usuario = '$nombre'";
             $response = mysqli_query($conn, $sql);
             if(!mysqli_num_rows($response)){
-                // Si entra aca el nombre de usuario no existe
-                        if (ctype_alnum($nombre)){ //Primero chequeo que la cadena sean TODOS alfanumericos
-                            if(!(strlen($nombre) > 6)or(!(strlen($nombre) < 20))){ // Luego chequeo que este en el rango de caracteres
+                        if (!ctype_alnum($nombre) || (!(strlen($nombre) > 6)) || (!(strlen($nombre) < 20))){
                                 $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
-                            }
-                            else{
-                                // si entra aca el nombre de usuario es valido por lo que tengo que chequear ahora la clave
-                                if(!(strlen($clave) > 8)){
-                                    $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
-                                }
-                                else{
-                                    if (!preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave) || !preg_match('/[\W_]/', $clave)) {
-                                        $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
-                                    }
-                                    else{
-                                        // Al llegar aca, tanto el nombre de usuario como la contraseña son validos
-                                        $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '$admin')";
-                                        $response = mysqli_query($conn, $sql);
-                                        if(!$response){
-                                            $respuesta =  ['status'=> 401, 'result'=>"No se ha podido crear el usuario"];
-                                        }
-                                        else{
-                                            $respuesta = ['status'=>200, 'result'=>"Se ha creado un nuevo usario"];
-                                        }
-                                    }
-                                }
-                            }
                         }
                         else{
-                            $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no es alfanumerico."];
+                            if((!(strlen($clave) > 8)) || (!preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave) || !preg_match('/[\W_]/', $clave))){
+                                $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
+                            }
+                            else{
+                                // Al llegar aca, tanto el nombre de usuario como la contraseña son validos
+                                $sql = "INSERT INTO `usuario`(`nombre_usuario`, `clave`, `es_admin`) VALUES ('$nombre', '$clave', '$admin')";
+                                $response = mysqli_query($conn, $sql);
+                                if(!$response){
+                                    $respuesta =  ['status'=> 401, 'result'=>"No se ha podido crear el usuario"];
+                                }
+                                else{
+                                    $respuesta = ['status'=>200, 'result'=>"Se ha creado un nuevo usario"];
+                                }
+                            }
                         }
             }
             else{
@@ -112,34 +99,23 @@ class usuarioController {
     public function editUser($id, $nombre, $clave, $admin){
         try{
             $conn = conectarbd();
-            if (ctype_alnum($nombre)){ //Primero chequeo que la cadena sean TODOS alfanumericos
-                if(!(strlen($nombre) > 6)or(!(strlen($nombre) < 20))){ // Luego chequeo que este en el rango de caracteres
-                    $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
-                }
-                else{
-                    // Cuando llegue aca paso la validacion del nombre de usuario
-                    if(!(strlen($clave) > 8)){
-                        $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
-                    }
-                    else{
-                        if (!preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave) || !preg_match('/[\W_]/', $clave)) {
-                            $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
-                        }
-                        else{
-                            $sql = "UPDATE  `usuario` SET nombre_usuario = '$nombre', clave = '$clave', es_admin = '$admin' WHERE id = $id";
-                            mysqli_query($conn, $sql);
-                            if(mysqli_affected_rows($conn) === 0){
-                                $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
-                            }
-                            else{
-                                $respuesta = ['status'=>200, 'result'=>"Se han actualizado los datos del usuario"];
-                            }
-                        }
-                    }
-                }
+            if (!ctype_alnum($nombre) || (!(strlen($nombre) > 6)) || (!(strlen($nombre) < 20))){
+                $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no cumple con los requisitos."];
             }
             else{
-                $respuesta = ['status'=> 401, 'result'=>"El nombre de usuario ingresado no es alfanumerico."];
+                if((!(strlen($clave) > 8)) || (!preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave) || !preg_match('/[\W_]/', $clave))){
+                    $respuesta = ['status'=> 401, 'result'=>"La clave no cumple con los requisitos."];
+                }
+                else{
+                    $sql = "UPDATE  `usuario` SET nombre_usuario = '$nombre', clave = '$clave', es_admin = '$admin' WHERE id = $id";
+                    mysqli_query($conn, $sql);
+                    if(mysqli_affected_rows($conn) === 0){
+                        $respuesta = ['status'=> 404, 'result'=>"ID del usuario inexistente"];
+                    }
+                    else{
+                        $respuesta = ['status'=>200, 'result'=>"Se han actualizado los datos del usuario"];
+                    }
+                }
             }
             $conn = desconectarbd($conn);
         }

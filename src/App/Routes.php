@@ -14,6 +14,8 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
     $authMiddleware = function($request, $handler){
         $response = new Response(); 
         $authHeader = $request->getHeader('Authorization');
+        var_dump($authHeader);
+        die;
         if(!$authHeader){
             $response->getBody()->write(json_encode(['error'=>'token no proporcionado']));
             return $response->withStatus(401);
@@ -39,7 +41,6 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
         try{
             $tokenDate = new DateTime($token->date);
             $currentDate = new DateTime();
-            $tokenDate->modify('+1 hour');
             // verifico si expiro
             if($currentDate > $tokenDate){
                 $response->getBody()->write(json_encode(['error'=>'token expirado']));
@@ -83,13 +84,7 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
 
         $respuesta = $usuarioController->login($nombre, $clave);
 
-        $responseData = [
-            'result' => $respuesta['result'],
-            'es_admin' => $respuesta['es_admin'],
-            'vencimiento_token' => $respuesta['vencimiento_token']
-        ];
-
-        $response->getBody()->write(json_encode($responseData));
+        $response->getBody()->write(json_encode($respuesta['result']));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
     });
