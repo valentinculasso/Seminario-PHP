@@ -54,8 +54,12 @@ class juegoController {
             if (!empty($texto)) {
                 $conditions[] = "j.nombre LIKE '%$texto%'"; // Agrega condición para el nombre
             }
-            if (!empty($clasificacion)) {
-                $conditions[] = "j.clasificacion_edad = '$clasificacion'"; // Agrega condición para la clasificación
+            if (!empty($clasificacion) && $clasificacion !== '+18') {
+                if ($clasificacion === "+13") {
+                    $conditions[] = "j.clasificacion_edad = '$clasificacion' OR j.clasificacion_edad = 'ATP'"; // Muestra +13 y ATP
+                } else {
+                    $conditions[] = "j.clasificacion_edad = '$clasificacion'"; // Muestra solo la clasificación seleccionada
+                }
             }
             if (!empty($plataforma)) {
                 $conditions[] = "P.nombre = '$plataforma'"; // Agrega condición para la plataforma
@@ -146,9 +150,9 @@ class juegoController {
                     $sql = "SELECT * FROM `juego` WHERE nombre = '$nombre_juego'";
                     $response = mysqli_query($conn, $sql);
                     if(mysqli_num_rows($response) === 0){
-                        // faltaria trabajar la imagen ?
-                        $img64 = base64_encode($imagen);
-                        $sql = "INSERT INTO `juego` (`nombre`, `descripcion`, `imagen`, `clasificacion_edad`) VALUES ('$nombre_juego', '$descripcion', '$img64', '$clasificacion_edad')";
+                        /*$imagen2 = "data:image/jpeg;base64,";
+                        $imagen2 .= $imagen; */
+                        $sql = "INSERT INTO `juego` (`nombre`, `descripcion`, `imagen`, `clasificacion_edad`) VALUES ('$nombre_juego', '$descripcion', '$imagen', '$clasificacion_edad')";
                         $response = mysqli_query($conn, $sql);
                         if(!$response){
                             $respuesta = ['status'=> 404, 'result'=>"El juego no se ha añadido", 'juego_id' => null];

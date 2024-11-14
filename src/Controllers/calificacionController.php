@@ -8,10 +8,10 @@
         public function createCalification($estrellas, $userID, $juegoID){
             try{
                 $conn = conectarbd();
-                $sql2 = "SELECT * FROM `juego` WHERE id = $juegoID";
+                $sql2 = "SELECT * FROM `calificacion` WHERE usuario_id = '$userID' AND juego_id = '$juegoID'";
                 $response2 = mysqli_query($conn, $sql2);
                 $result2 = mysqli_fetch_array($response2);
-                if($result2){
+                if(!$result2){
                     $sql = "INSERT INTO `calificacion` (`estrellas`, `usuario_id`, `juego_id`) VALUES ('$estrellas', '$userID', '$juegoID')";
                     $response = mysqli_query($conn, $sql);
                     if(!$response){
@@ -22,7 +22,7 @@
                     }
                 }
                 else{
-                    $respuesta =  ['status'=> 404, 'result'=>"La calificacion no puede ser creada porque el ID del juego ingresado no existe"];
+                    $respuesta =  ['status'=> 404, 'result'=>"La calificacion no puede ser creada porque el usuario ya cuenta con una calificacion para dicho juego"];
                 }
                 $conn = desconectarbd($conn);
             }
