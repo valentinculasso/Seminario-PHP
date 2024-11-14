@@ -111,7 +111,7 @@ class juegoController {
         }
         return $respuesta;
     }
-
+    
     // getJuego($id): Obtiene la informacion de un juego especifico y su listado de calificaciones. Recibo como parametro el ID del juego.
     public function getJuego($id){
         try{
