@@ -12,7 +12,7 @@ class juegoController {
     ataforma={plataforma} Listar los juegos de la página según los parámetros
     de búsqueda incluyendo la puntuación promedio del juego.
 
-        SELECT 
+        SELECT
             j.id AS id_juego, 
             j.nombre AS nombre_juego,
             P.nombre nombre_plataforma,

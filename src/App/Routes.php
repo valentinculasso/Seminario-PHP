@@ -14,8 +14,7 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
     $authMiddleware = function($request, $handler){
         $response = new Response(); 
         $authHeader = $request->getHeader('Authorization');
-        var_dump($authHeader);
-        die;
+
         if(!$authHeader){
             $response->getBody()->write(json_encode(['error'=>'token no proporcionado']));
             return $response->withStatus(401);
@@ -39,10 +38,13 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
         }
         // verifico si el token expiro
         try{
-            $tokenDate = new DateTime($token->date);
+            // ACA ESTA EL ERROR
+            $tokenDate = $token->date;
             $currentDate = new DateTime();
+            $currentDate->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
+            $current = $currentDate->format('Y-m-d H:i:s');
             // verifico si expiro
-            if($currentDate > $tokenDate){
+            if($current > $tokenDate){
                 $response->getBody()->write(json_encode(['error'=>'token expirado']));
                 return $response->withStatus(401);
             }
@@ -345,6 +347,21 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
         // delete a la base
 
         $respuesta = $calificacionController->deleteCalification($calificacion_id, $user_id);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+
+    })->add($authMiddleware);
+
+    // Obtener las calificaciones de un usuario, solo lo puede hacer un usuario logueado
+    $app->get('/calificaciones', function(Request $request, Response $response){
+
+        $calificacionController = new calificacionController();
+
+        $user_id = $request->getAttribute('usuario_id');
+
+        $respuesta = $calificacionController->getCalificaciones($user_id);
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
