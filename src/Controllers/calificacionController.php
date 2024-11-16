@@ -124,5 +124,33 @@
             }
             return $respuesta;
         }
+
+        public function getAllCalificaciones($juego_id) {
+            try{
+                $connection = conectarbd();
+                $sql = "SELECT * FROM `calificacion` WHERE juego_id = '$juego_id'";
+                $response = mysqli_query($connection, $sql);
+                if(!$response){
+                    $respuesta = ['status'=> 404, 'result'=>"No hay calificaciones que mostrar"];
+                }
+                else{
+                    $jsonData = array();
+                    while($array = mysqli_fetch_assoc($response)){
+                        $jsonData[]= $array;
+                    }
+                    if(!$jsonData){
+                        $respuesta = ['status'=> 404, 'result'=>"No hay juegos que mostrar"];
+                    }
+                    else{
+                        $respuesta = ['status'=>200, 'result'=>$jsonData];
+                    }
+                }
+                $connection = desconectarbd($connection);
+            }
+            catch(Exception $e){
+                $respuesta = ['status'=>500, 'result'=> $e->getMessage()];
+            }
+            return $respuesta;
+        }
     }
 ?>

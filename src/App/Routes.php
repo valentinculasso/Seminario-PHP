@@ -14,7 +14,6 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
     $authMiddleware = function($request, $handler){
         $response = new Response(); 
         $authHeader = $request->getHeader('Authorization');
-
         if(!$authHeader){
             $response->getBody()->write(json_encode(['error'=>'token no proporcionado']));
             return $response->withStatus(401);
@@ -344,8 +343,6 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
         
         $calificacion_id = $request -> getAttribute('id');
 
-        // delete a la base
-
         $respuesta = $calificacionController->deleteCalification($calificacion_id, $user_id);
 
         $response->getBody()->write(json_encode($respuesta['result']));
@@ -362,6 +359,21 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
         $user_id = $request->getAttribute('usuario_id');
 
         $respuesta = $calificacionController->getCalificaciones($user_id);
+
+        $response->getBody()->write(json_encode($respuesta['result']));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+
+    })->add($authMiddleware);
+
+    // Obtener las calificaciones de todos los usuarios.
+    $app->get('/calificacionescompletas/{id}', function(Request $request, Response $response){
+
+        $calificacionController = new calificacionController();
+
+        $juego_id = $request->getAttribute('id');
+
+        $respuesta = $calificacionController->getAllCalificaciones($juego_id);
 
         $response->getBody()->write(json_encode($respuesta['result']));
 
