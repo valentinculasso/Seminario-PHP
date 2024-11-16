@@ -379,7 +379,7 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
-    })->add($authMiddleware);
+    });
 
     // Endpoints Soporte
 
