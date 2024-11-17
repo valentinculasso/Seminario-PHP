@@ -7,29 +7,6 @@ require_once __DIR__ . "/../App/Functions.php";
 
 class juegoController {
 
-    /*  GET
-    /juegos?pagina={pagina}&clasificacion={clasificacion}&texto={texto}&pl
-    ataforma={plataforma} Listar los juegos de la página según los parámetros
-    de búsqueda incluyendo la puntuación promedio del juego.
-
-        SELECT
-            j.id AS id_juego, 
-            j.nombre AS nombre_juego,
-            P.nombre nombre_plataforma,
-            j.clasificacion_edad clasificacion_edad,
-            IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
-        FROM 
-            juego j
-        LEFT JOIN 
-            calificacion c ON j.id = c.juego_id
-        INNER JOIN soporte S ON j.id = S.juego_id
-        INNER JOIN plataforma P ON S.plataforma_id = P.id
-        GROUP BY
-            j.id
-        LIMIT 5 OFFSET 2;
-
-    */
-
     public function getPagina($pagina, $clasificacion, $texto, $plataforma){
         try{
             $connection = conectarbd();
@@ -150,8 +127,6 @@ class juegoController {
                     $sql = "SELECT * FROM `juego` WHERE nombre = '$nombre_juego'";
                     $response = mysqli_query($conn, $sql);
                     if(mysqli_num_rows($response) === 0){
-                        /*$imagen2 = "data:image/jpeg;base64,";
-                        $imagen2 .= $imagen; */
                         $sql = "INSERT INTO `juego` (`nombre`, `descripcion`, `imagen`, `clasificacion_edad`) VALUES ('$nombre_juego', '$descripcion', '$imagen', '$clasificacion_edad')";
                         $response = mysqli_query($conn, $sql);
                         if(!$response){

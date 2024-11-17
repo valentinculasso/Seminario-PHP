@@ -125,24 +125,30 @@
             return $respuesta;
         }
 
-        public function getAllCalificaciones($juego_id) {
+        public function getAllCalificaciones($juego_id, $pagina) {
             try{
                 $connection = conectarbd();
-                $sql = "SELECT * FROM `calificacion` WHERE juego_id = '$juego_id'";
+                $check = max(1, (int)$pagina);
+                $paginaActual = ($check - 1) * 5;
+                $sql = "SELECT * FROM `calificacion` WHERE juego_id = '$juego_id' LIMIT 5 OFFSET $paginaActual";
                 $response = mysqli_query($connection, $sql);
                 if(!$response){
                     $respuesta = ['status'=> 404, 'result'=>"No hay calificaciones que mostrar"];
                 }
                 else{
+                    $sqlCount = "SELECT COUNT(DISTINCT c.id) AS total FROM calificacion c WHERE juego_id = '$juego_id'";
+                    $resultCount = mysqli_query($connection, $sqlCount);
+                    $totalCount = mysqli_fetch_assoc($resultCount)['total'];
+
                     $jsonData = array();
                     while($array = mysqli_fetch_assoc($response)){
                         $jsonData[]= $array;
                     }
                     if(!$jsonData){
-                        $respuesta = ['status'=> 404, 'result'=>"No hay juegos que mostrar"];
+                        $respuesta = ['status'=> 404, 'result'=>"No hay calificaciones que mostrar"];
                     }
                     else{
-                        $respuesta = ['status'=>200, 'result'=>$jsonData];
+                        $respuesta = ['status'=>200, 'result'=>$jsonData, 'total'=>$totalCount];
                     }
                 }
                 $connection = desconectarbd($connection);

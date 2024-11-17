@@ -5,7 +5,7 @@
         public function agregarSoporte($juego_id, $plataforma_id){
             try{
                 $conn = conectarbd();
-                $sql = "SELECT * FROM `soporte` WHERE juego_id = $juego_id";
+                $sql = "SELECT * FROM `soporte` WHERE juego_id = '$juego_id' AND plataforma_id = '$plataforma_id'";
                 $result = mysqli_query($conn, $sql);
                 if(mysqli_num_rows($result) === 0){
                     if((strlen($plataforma_id) >= 1)|| (strlen($plataforma_id) <= 5)){
@@ -20,7 +20,7 @@
                         }
                 }
                 else{
-                    $respuesta = ['status'=> 404, 'result'=>"El soporte del juego ya existe!"];
+                    $respuesta = ['status'=> 404, 'result'=>"El soporte de esta plataforma ya existe!"];
                 }
                 $conn = desconectarbd($conn);
             }
@@ -29,6 +29,5 @@
             }
             return $respuesta;
         }
-
     }
 ?>

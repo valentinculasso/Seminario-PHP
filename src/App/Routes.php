@@ -11,6 +11,8 @@ require_once __DIR__ . "/../Controllers/calificacionController.php";
 
 require_once __DIR__ . "/../Controllers/soporteController.php";
 
+require_once __DIR__ . "/../Controllers/plataformaController.php";
+
     $authMiddleware = function($request, $handler){
         $response = new Response(); 
         $authHeader = $request->getHeader('Authorization');
@@ -37,7 +39,6 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
         }
         // verifico si el token expiro
         try{
-            // ACA ESTA EL ERROR
             $tokenDate = $token->date;
             $currentDate = new DateTime();
             $currentDate->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
@@ -367,15 +368,23 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
     })->add($authMiddleware);
 
     // Obtener las calificaciones de todos los usuarios.
-    $app->get('/calificacionescompletas/{id}', function(Request $request, Response $response){
+    $app->get('/calificacionescompletas', function(Request $request, Response $response){
 
         $calificacionController = new calificacionController();
 
-        $juego_id = $request->getAttribute('id');
+        $datos = $request->getQueryParams();
 
-        $respuesta = $calificacionController->getAllCalificaciones($juego_id);
+        $juego_id = $datos['id'];
+        $pagina = $datos['pagina'];
 
-        $response->getBody()->write(json_encode($respuesta['result']));
+        $respuesta = $calificacionController->getAllCalificaciones($juego_id, $pagina);
+
+        $responseData = [
+            'result' => $respuesta['result'],
+            'total' => $respuesta['total']
+        ];
+
+        $response->getBody()->write(json_encode($responseData));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
@@ -396,6 +405,8 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
 
             $respuesta = $soporteController->agregarSoporte($juego_id, $plataforma_id);
 
+            $response->getBody()->write(json_encode($respuesta['result']));
+
             return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
         }
         else{
@@ -405,4 +416,28 @@ require_once __DIR__ . "/../Controllers/soporteController.php";
         return $response;
 
     })->add($authMiddleware);
+
+    // Plataformas
+
+    //  trae las plataformas de los juegos. Solo lo puede hacer un usuario logeado y que sea administrador
+    $app->get('/plataforma', function(Request $request, Response $response){
+
+        $plataformaController = new plataformaController();
+
+        $admin = $request->getAttribute('es_admin');
+        if($admin){
+
+            $respuesta = $plataformaController->getPlataformas();
+
+            $response->getBody()->write(json_encode($respuesta['result']));
+
+            return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
+        }
+        else{
+            $response->getBody()->write(json_encode(['error'=>'token expirado']));
+            return $response->withStatus(401);
+        }
+
+    })->add($authMiddleware);
+
 ?>
