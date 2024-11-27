@@ -1,4 +1,7 @@
 # PHP
+
+<!--
+
 Proyecto seminario de PHP
 
 NUEVOS ENDPOINTS:
@@ -18,3 +21,5 @@ metodo getPagina(): se agrego una nueva consulta en la cual ademas de retornar l
 metodo agregarJuego(): ademas del result tambien devuelve el id del juego que fue creado. Esto lo hicimos para que al crear un juego se pueda guardar el id nuevo en localstorage y asi poder usarlo para crear los soportes
 
 metodo login(): se modifico el atributo "date" del token ya que antes guardaba la hora en la que fue creado, ahora guarda la hora en la que vence. Esto lo hicimos para que con el token se maneje todo en el front, de esta manera con solo tener el token se accede al id, vencimiento y es_admin del usuario que se logueo.
+
+-->

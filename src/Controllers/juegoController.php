@@ -12,7 +12,7 @@ class juegoController {
             $connection = conectarbd();
             $paginaActual = ($pagina - 1) * 5;
             // Consulta SQL normal sin ningun filtro
-            $sql = "SELECT 
+            $sql = "SELECT
                         j.id AS id_juego, 
                         j.nombre AS nombre_juego,
                         P.nombre nombre_plataforma,
@@ -48,6 +48,14 @@ class juegoController {
             $sql .= "GROUP BY 
                         j.id
                     LIMIT 5 OFFSET $paginaActual";
+
+
+            // GROUP BY  j.id, j.nombre, P.nombre, j.clasificacion_edad
+            /* 
+            $sql .= "GROUP BY 
+                        j.id
+                    LIMIT 5 OFFSET $paginaActual";
+            */
             
             $result = mysqli_query($connection, $sql);
 
