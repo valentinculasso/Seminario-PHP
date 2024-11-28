@@ -128,8 +128,9 @@
         public function getAllCalificaciones($juego_id, $pagina) {
             try{
                 $connection = conectarbd();
-                $check = max(1, (int)$pagina);
-                $paginaActual = ($check - 1) * 5;
+                /*$check = max(1, (int)$pagina);
+                $paginaActual = ($check - 1) * 5;*/
+                $paginaActual = ($pagina - 1) * 5;
                 $sql = "SELECT * FROM `calificacion` WHERE juego_id = '$juego_id' LIMIT 5 OFFSET $paginaActual";
                 $response = mysqli_query($connection, $sql);
                 if(!$response){
