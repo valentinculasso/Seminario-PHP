@@ -165,6 +165,9 @@ require_once __DIR__ . "/../Controllers/plataformaController.php";
 
         $datos = $request->getQueryParams();
 
+        // ALTERNATIVA, AGREGAR MANUALMENTE EL "+" YA QUE SI EN POSTMAN O URL ENVIO +13 EL BACKEND RECIBE 13 O 18 . Lo raro es que si pongo 1 solo filtro anda bien, si ya pongo +13 y algo mas
+        // funciona mal
+
         $parametros = [
             'pagina' => null,
             'clasificacion' => null,
@@ -173,7 +176,7 @@ require_once __DIR__ . "/../Controllers/plataformaController.php";
         ];
         foreach ($datos as $clave => $value) {
             if (array_key_exists($clave, $parametros)) {
-                $parametros[$clave] = $value;
+                    $parametros[$clave] = $value;
             }
         }
         $respuesta = $juegoController->getPagina(
@@ -424,20 +427,12 @@ require_once __DIR__ . "/../Controllers/plataformaController.php";
 
         $plataformaController = new plataformaController();
 
-        $admin = $request->getAttribute('es_admin');
-        if($admin){
+        $respuesta = $plataformaController->getPlataformas();
 
-            $respuesta = $plataformaController->getPlataformas();
+        $response->getBody()->write(json_encode($respuesta['result']));
 
-            $response->getBody()->write(json_encode($respuesta['result']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
 
-            return $response->withHeader('Content-Type', 'application/json')->withStatus($respuesta['status']);
-        }
-        else{
-            $response->getBody()->write(json_encode(['error'=>'token expirado']));
-            return $response->withStatus(401);
-        }
-
-    })->add($authMiddleware);
+    });
 
 ?>

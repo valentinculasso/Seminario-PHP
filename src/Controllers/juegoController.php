@@ -11,6 +11,58 @@ class juegoController {
         try{
             $connection = conectarbd();
             $paginaActual = ($pagina - 1) * 5;
+            /*
+                SELECT 
+                    j.id AS id_juego,
+                    j.nombre AS nombre_juego,
+                    P.nombre AS nombre_plataforma,
+                    j.clasificacion_edad AS clasificacion_edad,
+                    IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
+                FROM 
+                    juego j
+                LEFT JOIN 
+                    calificacion c 
+                    ON j.id = c.juego_id
+                INNER JOIN 
+                    soporte S 
+                    ON j.id = S.juego_id
+                INNER JOIN 
+                    plataforma P 
+                    ON S.plataforma_id = P.id
+                WHERE 
+                    j.nombre LIKE '%ea%'
+                    AND j.clasificacion_edad = '13'
+                    AND P.nombre = 'PC'
+                GROUP BY 
+                    j.id
+                LIMIT 5 
+                OFFSET 0;
+
+                SELECT 
+                    j.id AS id_juego,
+                    j.nombre AS nombre_juego,
+                    P.nombre AS nombre_plataforma,
+                    j.clasificacion_edad AS clasificacion_edad,
+                    IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
+                FROM 
+                    juego j
+                LEFT JOIN 
+                    calificacion c 
+                    ON j.id = c.juego_id
+                INNER JOIN 
+                    soporte S 
+                    ON j.id = S.juego_id
+                INNER JOIN 
+                    plataforma P 
+                    ON S.plataforma_id = P.id
+                WHERE 
+                    j.nombre LIKE '%ea%'
+                    AND j.clasificacion_edad = '+13'
+                GROUP BY 
+                    j.id
+                LIMIT 5 
+                OFFSET 0;
+            */
             // Consulta SQL normal sin ningun filtro
             $sql = "SELECT
                         j.id AS id_juego, 
@@ -33,7 +85,7 @@ class juegoController {
             }
             if (!empty($clasificacion) && $clasificacion !== '+18') {
                 if ($clasificacion === "+13") {
-                    $conditions[] = "j.clasificacion_edad = '$clasificacion' OR j.clasificacion_edad = 'ATP'"; // Muestra +13 y ATP
+                    $conditions[] = "(j.clasificacion_edad = '$clasificacion' OR j.clasificacion_edad = 'ATP')"; // Muestra +13 y ATP
                 } else {
                     $conditions[] = "j.clasificacion_edad = '$clasificacion'"; // Muestra solo la clasificación seleccionada
                 }
@@ -49,14 +101,6 @@ class juegoController {
                         j.id
                     LIMIT 5 OFFSET $paginaActual";
 
-
-            // GROUP BY  j.id, j.nombre, P.nombre, j.clasificacion_edad
-            /* 
-            $sql .= "GROUP BY 
-                        j.id
-                    LIMIT 5 OFFSET $paginaActual";
-            */
-            
             $result = mysqli_query($connection, $sql);
 
             // SQL NUEVO
