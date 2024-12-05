@@ -11,71 +11,20 @@ class juegoController {
         try{
             $connection = conectarbd();
             $paginaActual = ($pagina - 1) * 5;
-            /*
-                SELECT 
-                    j.id AS id_juego,
-                    j.nombre AS nombre_juego,
-                    P.nombre AS nombre_plataforma,
-                    j.clasificacion_edad AS clasificacion_edad,
-                    IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
-                FROM 
-                    juego j
-                LEFT JOIN 
-                    calificacion c 
-                    ON j.id = c.juego_id
-                INNER JOIN 
-                    soporte S 
-                    ON j.id = S.juego_id
-                INNER JOIN 
-                    plataforma P 
-                    ON S.plataforma_id = P.id
-                WHERE 
-                    j.nombre LIKE '%ea%'
-                    AND j.clasificacion_edad = '13'
-                    AND P.nombre = 'PC'
-                GROUP BY 
-                    j.id
-                LIMIT 5 
-                OFFSET 0;
 
-                SELECT 
-                    j.id AS id_juego,
-                    j.nombre AS nombre_juego,
-                    P.nombre AS nombre_plataforma,
-                    j.clasificacion_edad AS clasificacion_edad,
-                    IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
-                FROM 
-                    juego j
-                LEFT JOIN 
-                    calificacion c 
-                    ON j.id = c.juego_id
-                INNER JOIN 
-                    soporte S 
-                    ON j.id = S.juego_id
-                INNER JOIN 
-                    plataforma P 
-                    ON S.plataforma_id = P.id
-                WHERE 
-                    j.nombre LIKE '%ea%'
-                    AND j.clasificacion_edad = '+13'
-                GROUP BY 
-                    j.id
-                LIMIT 5 
-                OFFSET 0;
-            */
             // Consulta SQL normal sin ningun filtro
             $sql = "SELECT
                         j.id AS id_juego, 
                         j.nombre AS nombre_juego,
-                        P.nombre nombre_plataforma,
+                        IFNULL(GROUP_CONCAT(DISTINCT P.nombre SEPARATOR ', '), 'Ninguna') AS plataformas,
                         j.clasificacion_edad clasificacion_edad,
                         IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
                     FROM 
                         juego j
                     LEFT JOIN 
                         calificacion c ON j.id = c.juego_id
-                    INNER JOIN soporte S ON j.id = S.juego_id
-                    INNER JOIN plataforma P ON S.plataforma_id = P.id ";
+                    LEFT JOIN soporte S ON j.id = S.juego_id
+                    LEFT JOIN plataforma P ON S.plataforma_id = P.id ";
 
             // Inicializa un array para almacenar las condiciones de filtrado
             $conditions = [];
@@ -97,8 +46,8 @@ class juegoController {
                 $sql .= " WHERE " . implode(" AND ", $conditions);
             }
 
-            $sql .= "GROUP BY 
-                        j.id
+            $sql .= "GROUP BY
+                        j.id, j.nombre, j.clasificacion_edad
                     LIMIT 5 OFFSET $paginaActual";
 
             $result = mysqli_query($connection, $sql);
@@ -107,8 +56,8 @@ class juegoController {
             
             // Consulta para contar el total de juegos (sin LIMIT y OFFSET)
             $sqlCount = "SELECT COUNT(DISTINCT j.id) AS total FROM juego j 
-                        INNER JOIN soporte S ON j.id = S.juego_id
-                        INNER JOIN plataforma P ON S.plataforma_id = P.id ";
+                        LEFT JOIN soporte S ON j.id = S.juego_id
+                        LEFT JOIN plataforma P ON S.plataforma_id = P.id ";
 
             if (count($conditions) > 0) {
                 $sqlCount .= " WHERE " . implode(" AND ", $conditions);
