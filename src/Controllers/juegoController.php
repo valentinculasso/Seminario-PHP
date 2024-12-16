@@ -1,8 +1,5 @@
 <?php
 
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-
 require_once __DIR__ . "/../App/Functions.php";
 
 class juegoController {
@@ -10,13 +7,13 @@ class juegoController {
     public function getPagina($pagina, $clasificacion, $texto, $plataforma){
         try{
             $connection = conectarbd();
+
             $paginaActual = ($pagina - 1) * 5;
 
-            // Consulta SQL normal sin ningun filtro
             $sql = "SELECT
                         j.id AS id_juego, 
                         j.nombre AS nombre_juego,
-                        IFNULL(GROUP_CONCAT(DISTINCT P.nombre SEPARATOR ', '), 'Ninguna') AS plataformas,
+                        IFNULL(GROUP_CONCAT(DISTINCT P.nombre SEPARATOR ', '), 'Ninguno') AS plataformas,
                         j.clasificacion_edad clasificacion_edad,
                         IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
                     FROM 
@@ -26,35 +23,32 @@ class juegoController {
                     LEFT JOIN soporte S ON j.id = S.juego_id
                     LEFT JOIN plataforma P ON S.plataforma_id = P.id ";
 
-            // Inicializa un array para almacenar las condiciones de filtrado
             $conditions = [];
             
             if (!empty($texto)) {
-                $conditions[] = "j.nombre LIKE '%$texto%'"; // Agrega condición para el nombre
+                $conditions[] = "j.nombre LIKE '%$texto%'";
             }
-            if (!empty($clasificacion) && $clasificacion !== '+18') {
+            if (!empty($clasificacion) && $clasificacion !== "+18") {
                 if ($clasificacion === "+13") {
-                    $conditions[] = "(j.clasificacion_edad = '$clasificacion' OR j.clasificacion_edad = 'ATP')"; // Muestra +13 y ATP
+                    $conditions[] = "(j.clasificacion_edad = '$clasificacion' OR j.clasificacion_edad = 'ATP')";
                 } else {
-                    $conditions[] = "j.clasificacion_edad = '$clasificacion'"; // Muestra solo la clasificación seleccionada
+                    $conditions[] = "j.clasificacion_edad = '$clasificacion'";
                 }
             }
             if (!empty($plataforma)) {
-                $conditions[] = "P.nombre = '$plataforma'"; // Agrega condición para la plataforma
+                $conditions[] = "P.nombre = '$plataforma'";
             }
             if (count($conditions) > 0) {
                 $sql .= " WHERE " . implode(" AND ", $conditions);
             }
 
-            $sql .= "GROUP BY
+            $sql .= "GROUP BY 
                         j.id, j.nombre, j.clasificacion_edad
                     LIMIT 5 OFFSET $paginaActual";
 
             $result = mysqli_query($connection, $sql);
-
-            // SQL NUEVO
             
-            // Consulta para contar el total de juegos (sin LIMIT y OFFSET)
+            // Consulta para contar el total de juegos
             $sqlCount = "SELECT COUNT(DISTINCT j.id) AS total FROM juego j 
                         LEFT JOIN soporte S ON j.id = S.juego_id
                         LEFT JOIN plataforma P ON S.plataforma_id = P.id ";
@@ -66,15 +60,15 @@ class juegoController {
             $resultCount = mysqli_query($connection, $sqlCount);
             $totalCount = mysqli_fetch_assoc($resultCount)['total'];
 
-            // DE ACA PARA ABAJO ES LO QUE DEVUELVO A ROUTES
-
             $jsonData = array();
             while($array = mysqli_fetch_assoc($result)){
                 $jsonData[]= $array;
             }
             if(!$jsonData){
-                $respuesta = ['status'=> 404, 'result'=>"No hay juegos que mostrar"];
+                $respuesta = ['status'=> 404, 'result'=>"No hay juegos que mostrar", 'total'=> 0];
             }
+            // Aca podria ir un if porque puede que el $sqlCount sea null y eso daria error
+            // En el if de arriba agregue el campo 'total' tambien en la condicion deberia poner algo como: | !$totalCount (or !$totalCount)
             else{
                 $respuesta = [
                     'status'=>200,
@@ -94,14 +88,17 @@ class juegoController {
     public function getJuego($id){
         try{
             $connection = conectarbd();
-            $sql = "SELECT 
-                        j.*, 
+            $sql = "SELECT
+                        j.*,
+                        IFNULL(GROUP_CONCAT(DISTINCT P.nombre SEPARATOR ', '), 'Ninguno') AS plataformas,
                         IFNULL(AVG(c.estrellas), 0) AS calificacion_promedio
-                    FROM 
+                    FROM
                         juego j
-                    LEFT JOIN 
+                    LEFT JOIN
                         calificacion c ON j.id = c.juego_id
-                    WHERE 
+                    LEFT JOIN soporte S ON j.id = S.juego_id
+                    LEFT JOIN plataforma P ON S.plataforma_id = P.id
+                    WHERE
                         j.id = $id";
 
             $result = mysqli_query($connection, $sql);
@@ -193,7 +190,6 @@ class juegoController {
     public function eliminarJuego($id){
         try{
             $conn = conectarbd();
-            // Aca tengo un problema, porque si el id de mi juego esta en soporte no me va a dejar eliminarlo ¿deberia chequear que no este en soporte tambien?
             $consultaSoporte = "SELECT * FROM `soporte` WHERE juego_id = $id";
             $resultS = mysqli_query($conn, $consultaSoporte);
             if(mysqli_num_rows($resultS) === 0){
