@@ -38,12 +38,12 @@ class usuarioController {
                     $respuesta = ['status'=>200, 'result'=>$token_encode];
                 }
                 else{
-                    $respuesta = ['status'=>401, 'result'=>'El nombre de usuario no existe o credenciales incorrectas'];
+                    $respuesta = ['status'=>401, 'result'=>'El nombre de usuario no existe o constraseña incorrecta'];
                 }
             }
             else{
                 // El nombre de usuario no existe
-                $respuesta = ['status'=>401, 'result'=>'El nombre de usuario no existe o credenciales incorrectas'];
+                $respuesta = ['status'=>401, 'result'=>'El nombre de usuario no existe o contraseña incorrecta'];
             }
             $conn = desconectarbd($conn);
         }
